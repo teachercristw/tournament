@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ESL Word Race: Tournament Edition</title>
+    
+    <!-- CDNs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #FF5722;
+            --secondary: #2196F3;
+            --success: #4CAF50;
+            --danger: #F44336;
+            --accent: #FFC107;
+            --bg: #F0F4F8;
+            --text: #2C3E50;
+        }
+
+        body { 
+            user-select: none; 
+            -webkit-user-select: none; 
+            touch-action: none; 
+            margin: 0; 
+            overflow: hidden; 
+            font-family: 'Fredoka One', 'Century Gothic', 'AppleGothic', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            font-weight: bold;
+        }
+
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- Screens --- */
+        .screen {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+        .active { display: flex; }
+
+        /* --- UI Elements --- */
+        .btn {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 20px 45px;
+            font-size: 2rem;
+            border-radius: 60px;
+            cursor: pointer;
+            box-shadow: 0 10px #1565C0;
+            transition: all 0.1s;
+            margin: 15px;
+            min-width: 300px;
+        }
+        .btn:active { transform: translateY(4px); box-shadow: 0 6px #1565C0; }
+        .btn-orange { background: var(--primary); box-shadow: 0 10px #BF360C; }
+        .btn-green { background: var(--success); box-shadow: 0 10px #1B5E20; }
+
+        /* --- Bracket UI --- */
+        .bracket {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        .matchup {
+            background: white;
+            border: 8px solid var(--secondary);
+            border-radius: 30px;
+            padding: 25px;
+            min-width: 250px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+        .team-box {
+            padding: 18px;
+            margin: 12px;
+            background: #e3f2fd;
+            border-radius: 20px;
+            font-size: 1.8rem;
+            transition: background 0.4s;
+        }
+        .winner-box { 
+            background: var(--accent) !important; 
+            transform: scale(1.1);
+            animation: pulse 1s infinite;
+        }
+
+        /* --- Game Area --- */
+        #word-slots { display: flex; gap: 15px; margin-bottom: 40px; }
+        .slot {
+            width: 80px; height: 80px;
+            border: 6px dashed #BDBDBD;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            background: white;
+        }
+        #letter-sea {
+            position: relative;
+            width: 90vw;
+            height: 45vh;
+            background: rgba(255,255,255,0.8);
+            border: 6px solid var(--secondary);
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.05);
+        }
+        .letter-bubble {
+            position: absolute;
+            width: 95px; height: 95px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            box-shadow: 0 10px rgba(0,0,0,0.2);
+            cursor: pointer;
+            color: white;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+        }
+
+        /* --- Dashboard --- */
+        #gear { position: fixed; top: 15px; right: 15px; font-size: 40px; cursor: pointer; z-index: 1000; opacity: 0.4; transition: opacity 0.3s; }
+        #gear:hover { opacity: 1; }
+        #dash-modal {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 90%; max-width: 650px; background: white;
+            padding: 40px; border-radius: 40px; box-shadow: 0 0 150px rgba(0,0,0,0.7);
+            z-index: 1001;
+            max-height: 85vh; overflow-y: auto;
+        }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999; }
+        textarea { width: 100%; border-radius: 15px; padding: 15px; border: 3px solid #ccc; font-family: monospace; font-size: 16px; margin-bottom: 10px; }
+
+        @keyframes pulse { 0% { transform: scale(1.1); } 50% { transform: scale(1.18); } 100% { transform: scale(1.1); } }
+    </style>
+</head>
+<body>
+
+    <div id="gear" onclick="toggleDash()">⚙️</div>
+
+    <div id="game-container">
+        <!-- Start Screen -->
+        <div id="screen-start" class="screen active">
+            <h1 style="font-size: 6rem; color: var(--primary); margin:0;">WORD RACE</h1>
+            <h2 style="color: var(--secondary); font-size: 2.5rem;">TOURNAMENT</h2>
+            <button class="btn" onclick="setRole('host')">HOST (Big Screen)</button>
+            <button class="btn btn-orange" onclick="setRole('player')">PLAYER (iPad)</button>
+        </div>
+
+        <!-- Team Setup -->
+        <div id="screen-setup" class="screen">
+            <h1>Select Your Team</h1>
+            <div id="team-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:25px;"></div>
+        </div>
+
+        <!-- Host Bracket -->
+        <div id="screen-host" class="screen">
+            <h1 id="host-msg" style="color: var(--primary); font-size: 3rem;">Ready!</h1>
+            <div class="bracket" id="bracket-display"></div>
+            <div style="margin-top: 50px;">
+                <button class="btn btn-green" onclick="newRound()">START RACE</button>
+                <button class="btn btn-orange" onclick="resetBracket()">NEW BRACKET</button>
+            </div>
+        </div>
+
+        <!-- Play Screen -->
+        <div id="screen-play" class="screen">
+            <h2 id="player-title" style="margin:0; color: var(--secondary); font-size: 2.5rem;">TEAM</h2>
+            <div id="word-slots"></div>
+            <div id="letter-sea"></div>
+        </div>
+
+        <!-- Feedback -->
+        <div id="screen-wait" class="screen">
+            <h1 id="wait-msg" style="font-size: 5rem;">Get Ready...</h1>
+            <p style="font-size: 2rem;">Wait for the teacher to start!</p>
+        </div>
+    </div>
+
+    <!-- Teacher Dashboard -->
+    <div class="overlay" id="overlay" onclick="toggleDash()"></div>
+    <div id="dash-modal">
+        <h2 style="color: var(--primary);">Tournament Settings</h2>
+        <div style="text-align: left;">
+            <label>Firebase Config (Paste Console Code):</label>
+            <textarea id="fb-input" rows="8"></textarea>
+            <label>Word List (Comma Separated):</label>
+            <textarea id="vocab-input" rows="3">APPLE, BANANA, ORANGE, SCHOOL, TEACHER, TIGER, DRAGON, HAPPY, PURPLE, SUNDAY</textarea>
+        </div>
+        <div style="display:flex; gap:15px; margin-top:20px;">
+            <button class="btn" style="font-size: 1.2rem; min-width: 150px; padding: 15px;" onclick="applySettings()">SAVE & SYNC</button>
+            <button class="btn btn-orange" style="font-size: 1.2rem; min-width: 150px; padding: 15px;" onclick="toggleDash()">CLOSE</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Game Config & Firebase ---
+        let db = null;
+        let myTeam = null;
+        let myRole = null;
+        
+        let state = {
+            matches: [],
+            currentWord: "",
+            status: "waiting",
+            vocab: ["APPLE", "BANANA", "ORANGE", "SCHOOL", "TEACHER"]
+        };
+
+        const currentConfig = {
+            apiKey: "AIzaSyAeW720p-jxvUKu4wGjltbV-7PzXXH2Lv8",
+            authDomain: "tournament-64337.firebaseapp.com",
+            databaseURL: "https://tournament-64337-default-rtdb.firebaseio.com",
+            projectId: "tournament-64337",
+            storageBucket: "tournament-64337.firebasestorage.app",
+            messagingSenderId: "1001808716448",
+            appId: "1:1001808716448:web:d2c23c00b78faebd329fc5"
+        };
+
+        const audio = new (window.AudioContext || window.webkitAudioContext)();
+
+        // --- Audio SFX ---
+        function snd(f, type, d) {
+            const osc = audio.createOscillator();
+            const g = audio.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(f, audio.currentTime);
+            g.gain.setValueAtTime(0.1, audio.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.01, audio.currentTime + d);
+            osc.connect(g); g.connect(audio.destination);
+            osc.start(); osc.stop(audio.currentTime + d);
+        }
+
+        // --- Core Helpers ---
+        function shuffle(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function cleanConfig(str) {
+            try {
+                let cleaned = str.replace(/^(const|let|var)\s+\w+\s*=\s*/, '').replace(/;$/, '');
+                return JSON.parse(cleaned.replace(/(\w+):/g, '"$1"').replace(/'/g, '"'));
+            } catch(e) { return null; }
+        }
+
+        // --- Firebase Logic ---
+        function initFB(config) {
+            if (!firebase.apps.length) firebase.initializeApp(config);
+            db = firebase.database();
+            db.ref('word_race_data').on('value', (snap) => {
+                const data = snap.val();
+                if (data) {
+                    state = data;
+                    syncUI();
+                }
+            });
+        }
+
+        // --- Navigation ---
+        function setRole(r) {
+            myRole = r;
+            if (r === 'player') {
+                renderTeamGrid();
+                showScreen('screen-setup');
+            } else {
+                showScreen('screen-host');
+            }
+        }
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        // --- Host: Tournament Control ---
+        function resetBracket() {
+            const teams = shuffle([1, 2, 3, 4, 5, 6]);
+            const matches = [
+                { t1: teams[0], t2: teams[1], winner: null },
+                { t1: teams[2], t2: teams[3], winner: null },
+                { t1: teams[4], t2: teams[5], winner: null }
+            ];
+            db.ref('word_race_data').update({
+                matches: matches,
+                status: 'waiting',
+                currentWord: ""
+            });
+        }
+
+        function newRound() {
+            const word = state.vocab[Math.floor(Math.random() * state.vocab.length)];
+            const resetWinners = state.matches.map(m => ({...m, winner: null}));
+            db.ref('word_race_data').update({
+                currentWord: word,
+                status: 'playing',
+                matches: resetWinners
+            });
+        }
+
+        // --- Player: Game Engine ---
+        function renderTeamGrid() {
+            const grid = document.getElementById('team-grid');
+            grid.innerHTML = '';
+            for(let i=1; i<=6; i++) {
+                const b = document.createElement('button');
+                b.className = 'btn';
+                b.innerText = `TEAM ${i}`;
+                b.onclick = () => { 
+                    myTeam = i; 
+                    document.getElementById('player-title').innerText = `TEAM ${i}`;
+                    showScreen('screen-wait');
+                    syncUI();
+                };
+                grid.appendChild(b);
+            }
+        }
+
+        function playWordGame() {
+            const match = state.matches.find(m => m.t1 == myTeam || m.t2 == myTeam);
+            
+            if (!match || state.status !== 'playing' || match.winner) {
+                if (match && match.winner) {
+                    document.getElementById('wait-msg').innerText = match.winner == myTeam ? "WINNER! 🏆" : "Too Slow! 💨";
+                } else {
+                    document.getElementById('wait-msg').innerText = "Waiting...";
+                }
+                showScreen('screen-wait');
+                return;
+            }
+
+            const slots = document.getElementById('word-slots');
+            const sea = document.getElementById('letter-sea');
+            slots.innerHTML = ''; sea.innerHTML = '';
+            
+            let solvedIdx = 0;
+            const word = state.currentWord;
+            const chars = word.split('');
+            
+            chars.forEach(() => {
+                const s = document.createElement('div');
+                s.className = 'slot';
+                slots.appendChild(s);
+            });
+
+            // Scramble + Distractors
+            const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const pool = shuffle([...chars, alphabet[Math.floor(Math.random()*26)], alphabet[Math.floor(Math.random()*26)]]);
+            
+            pool.forEach(c => {
+                const bubble = document.createElement('div');
+                bubble.className = 'letter-bubble';
+                bubble.innerText = c;
+                bubble.style.left = (10 + Math.random() * 75) + '%';
+                bubble.style.top = (10 + Math.random() * 75) + '%';
+                
+                bubble.onclick = () => {
+                    if (c === word[solvedIdx]) {
+                        snd(400 + (solvedIdx * 100), 'sine', 0.1);
+                        slots.children[solvedIdx].innerText = c;
+                        slots.children[solvedIdx].style.borderColor = 'var(--success)';
+                        bubble.remove();
+                        solvedIdx++;
+                        if (solvedIdx === word.length) {
+                            snd(880, 'sine', 0.6);
+                            winMatch();
+                        }
+                    } else {
+                        snd(150, 'sawtooth', 0.3);
+                        bubble.style.background = 'var(--danger)';
+                        setTimeout(() => bubble.style.background = 'var(--accent)', 500);
+                    }
+                };
+                sea.appendChild(bubble);
+            });
+            showScreen('screen-play');
+        }
+
+        function winMatch() {
+            const mIdx = state.matches.findIndex(m => m.t1 == myTeam || m.t2 == myTeam);
+            if (state.matches[mIdx].winner === null) {
+                db.ref(`word_race_data/matches/${mIdx}/winner`).set(myTeam);
+            }
+        }
+
+        // --- UI Syncer ---
+        function syncUI() {
+            if (myRole === 'host') {
+                const container = document.getElementById('bracket-display');
+                container.innerHTML = '';
+                state.matches.forEach(m => {
+                    const div = document.createElement('div');
+                    div.className = 'matchup';
+                    div.innerHTML = `
+                        <div class="team-box ${m.winner == m.t1 ? 'winner-box' : ''}">TEAM ${m.t1}</div>
+                        <div style="color:#aaa">VS</div>
+                        <div class="team-box ${m.winner == m.t2 ? 'winner-box' : ''}">TEAM ${m.t2}</div>
+                    `;
+                    container.appendChild(div);
+                });
+                document.getElementById('host-msg').innerText = state.status === 'playing' ? `ROUND: ${state.currentWord}` : "Tournament Ready";
+            } else if (myRole === 'player' && myTeam) {
+                playWordGame();
+            }
+        }
+
+        // --- Dash Actions ---
+        function toggleDash() {
+            const m = document.getElementById('dash-modal');
+            const o = document.getElementById('overlay');
+            const visible = m.style.display === 'block';
+            m.style.display = visible ? 'none' : 'block';
+            o.style.display = visible ? 'none' : 'block';
+            if (!visible) {
+                document.getElementById('fb-input').value = JSON.stringify(currentConfig, null, 2);
+                document.getElementById('vocab-input').value = state.vocab.join(', ');
+            }
+        }
+
+        function applySettings() {
+            const vocab = document.getElementById('vocab-input').value.split(',').map(v => v.trim().toUpperCase()).filter(v => v);
+            const rawFB = document.getElementById('fb-input').value;
+            const config = cleanConfig(rawFB);
+
+            if (config) {
+                initFB(config);
+                db.ref('word_race_data/vocab').set(vocab);
+                alert("Synced!");
+                toggleDash();
+            } else {
+                alert("Config JSON Error!");
+            }
+        }
+
+        window.onload = () => initFB(initialFirebaseConfig);
+    </script>
+</body>
+</html>
