@@ -32,14 +32,6 @@
             font-weight: bold;
         }
 
-        #game-container {
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
         /* --- Screens --- */
         .screen {
             display: none;
@@ -49,6 +41,8 @@
             justify-content: center;
             padding: 20px;
             text-align: center;
+            height: 100vh;
+            box-sizing: border-box;
         }
         .active { display: flex; }
 
@@ -65,7 +59,7 @@
             transition: all 0.1s;
             margin: 15px;
             min-width: 320px;
-            min-height: 80px; /* Large touch area for Smartboards */
+            min-height: 85px;
         }
         .btn:active { transform: translateY(4px); box-shadow: 0 6px #1565C0; }
         .btn-orange { background: var(--primary); box-shadow: 0 10px #BF360C; }
@@ -78,7 +72,6 @@
             gap: 25px;
             flex-wrap: wrap;
             width: 100%;
-            min-height: 200px;
         }
         .matchup {
             background: white;
@@ -87,7 +80,6 @@
             padding: 25px;
             min-width: 250px;
             box-shadow: 0 15px 30px rgba(0,0,0,0.1);
-            animation: fadeIn 0.5s ease;
         }
         .team-box {
             padding: 18px;
@@ -95,7 +87,6 @@
             background: #e3f2fd;
             border-radius: 20px;
             font-size: 1.8rem;
-            transition: background 0.4s;
         }
         .winner-box { 
             background: var(--accent) !important; 
@@ -119,14 +110,14 @@
             position: relative;
             width: 90vw;
             height: 45vh;
-            background: rgba(255,255,255,0.8);
+            background: white;
             border: 6px solid var(--secondary);
             border-radius: 40px;
             overflow: hidden;
         }
         .letter-bubble {
             position: absolute;
-            width: 100px; height: 100px; /* Larger for Precision */
+            width: 100px; height: 100px;
             background: var(--accent);
             border-radius: 50%;
             display: flex;
@@ -134,111 +125,90 @@
             justify-content: center;
             font-size: 3rem;
             box-shadow: 0 10px rgba(0,0,0,0.2);
-            cursor: pointer;
             color: white;
+            cursor: pointer;
         }
 
-        /* --- Teacher Dashboard --- */
+        /* --- Utilities --- */
         #gear { position: fixed; top: 15px; right: 15px; font-size: 40px; cursor: pointer; z-index: 1000; opacity: 0.3; }
-        #status-dot { position: fixed; top: 25px; left: 25px; width: 15px; height: 15px; border-radius: 50%; background: gray; z-index: 1000; }
+        #status-dot { position: fixed; top: 25px; left: 25px; width: 20px; height: 20px; border-radius: 50%; background: #666; z-index: 1000; border: 2px solid white; }
+        
         #dash-modal {
             display: none;
             position: fixed;
             top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 90%; max-width: 650px; background: white;
-            padding: 40px; border-radius: 40px; box-shadow: 0 0 150px rgba(0,0,0,0.7);
+            padding: 40px; border-radius: 40px; box-shadow: 0 0 150px rgba(0,0,0,0.8);
             z-index: 1001;
-            max-height: 85vh; overflow-y: auto;
+            max-height: 80vh; overflow-y: auto;
         }
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999; }
-        textarea { width: 100%; border-radius: 15px; padding: 15px; border: 3px solid #ccc; font-family: monospace; font-size: 16px; box-sizing: border-box; }
 
-        @keyframes pulse { 0% { transform: scale(1.1); } 50% { transform: scale(1.18); } 100% { transform: scale(1.1); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { transform: scale(1.1); } 50% { transform: scale(1.15); } 100% { transform: scale(1.1); } }
     </style>
 </head>
 <body>
 
-    <div id="status-dot" title="Firebase Status"></div>
+    <div id="status-dot"></div>
     <div id="gear" onclick="toggleDash()">⚙️</div>
 
     <div id="game-container">
         <!-- Start Screen -->
         <div id="screen-start" class="screen active">
-            <h1 style="font-size: 6rem; color: var(--primary); margin:0;">WORD RACE</h1>
-            <h2 style="color: var(--secondary); font-size: 2.5rem; margin-top:0;">Tournament Mode</h2>
-            <button class="btn" onclick="setRole('host')">TEACHER (Smartboard)</button>
-            <button class="btn btn-orange" onclick="setRole('player')">TEAM (iPad)</button>
+            <h1 style="font-size: 5rem; color: var(--primary); margin:0;">WORD RACE</h1>
+            <h2 style="color: var(--secondary);">Tournament Edition</h2>
+            <button class="btn" onclick="initMode('host')">HOST SCREEN</button>
+            <button class="btn btn-orange" onclick="initMode('player')">PLAYER iPAD</button>
         </div>
 
         <!-- Team Setup -->
         <div id="screen-setup" class="screen">
             <h1>Select Your Team</h1>
-            <div id="team-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:25px;"></div>
+            <div id="team-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;"></div>
         </div>
 
         <!-- Host Bracket -->
         <div id="screen-host" class="screen">
-            <h1 id="host-msg" style="color: var(--primary); font-size: 3rem;">Ready to Race?</h1>
-            <div class="bracket" id="bracket-display">
-                <p style="color:#aaa;">Click "New Bracket" to assign teams!</p>
-            </div>
-            <div style="margin-top: 50px;">
-                <button class="btn btn-green" onclick="newRound()">START RACE (NEW WORD)</button>
-                <button class="btn btn-orange" onclick="resetBracket()">SHUFFLE/NEW BRACKET</button>
+            <h1 id="host-msg" style="color: var(--primary); font-size: 3rem;">Waiting for Teams...</h1>
+            <div class="bracket" id="bracket-display"></div>
+            <div style="margin-top: 40px;">
+                <button class="btn btn-green" onclick="forceNewRound()">START RACE</button>
+                <button class="btn btn-orange" onclick="forceResetTournament()">NEW BRACKET</button>
             </div>
         </div>
 
-        <!-- Play Screen -->
+        <!-- Player Screen -->
         <div id="screen-play" class="screen">
             <h2 id="player-title" style="margin:0; color: var(--secondary); font-size: 2.5rem;">TEAM</h2>
             <div id="word-slots"></div>
             <div id="letter-sea"></div>
         </div>
 
-        <!-- Feedback -->
+        <!-- Wait Screen -->
         <div id="screen-wait" class="screen">
-            <h1 id="wait-msg" style="font-size: 5rem;">Get Ready...</h1>
-            <p style="font-size: 2rem;">Wait for teacher to start!</p>
+            <h1 id="wait-msg" style="font-size: 4rem;">Get Ready!</h1>
+            <p style="font-size: 2rem;">Watch the big screen...</p>
         </div>
     </div>
 
     <!-- Teacher Dashboard -->
     <div class="overlay" id="overlay" onclick="toggleDash()"></div>
     <div id="dash-modal">
-        <h2 style="color: var(--primary);">Tournament Control</h2>
-        <div style="text-align: left;">
-            <label>1. Firebase Credentials (JSON):</label>
-            <textarea id="fb-input" rows="6" placeholder='{"apiKey": "..."}'></textarea>
-            <br><br>
-            <label>2. Word List (Comma Separated):</label>
-            <textarea id="vocab-input" rows="3">APPLE, BANANA, ORANGE, SCHOOL, TEACHER, TIGER, DRAGON, HAPPY, PURPLE, SUNDAY</textarea>
-        </div>
-        <div style="display:flex; gap:15px; margin-top:20px;">
-            <button class="btn" style="font-size: 1.2rem; min-width: 150px; padding: 15px;" onclick="applySettings()">SAVE & CONNECT</button>
-            <button class="btn btn-orange" style="font-size: 1.2rem; min-width: 150px; padding: 15px;" onclick="toggleDash()">CLOSE</button>
+        <h2>Settings</h2>
+        <label>Firebase Config (JSON):</label><br>
+        <textarea id="fb-config" style="width:100%; height:120px; font-family:monospace;"></textarea>
+        <br><br>
+        <label>Vocabulary (comma separated):</label><br>
+        <textarea id="vocab-input" style="width:100%; height:60px;">APPLE, BANANA, ORANGE, CHERRY, DRAGON, SCHOOL, HAPPY, SUMMER</textarea>
+        <div style="margin-top:20px;">
+            <button class="btn" style="min-width:150px; font-size:1.2rem;" onclick="saveConfig()">SAVE & SYNC</button>
+            <button class="btn btn-orange" style="min-width:150px; font-size:1.2rem;" onclick="toggleDash()">CLOSE</button>
         </div>
     </div>
 
     <script>
-        // --- Configuration ---
-        const fbInput = document.getElementById('fb-input');
-        const vocabInput = document.getElementById('vocab-input');
-        const statusDot = document.getElementById('status-dot');
-
-        let db = null;
-        let myTeam = null;
-        let myRole = null;
-        
-        let state = {
-            matches: [],
-            currentWord: "",
-            status: "waiting",
-            vocab: ["APPLE", "BANANA", "ORANGE", "SCHOOL", "TEACHER"]
-        };
-
-        // Your Credentials
-        const savedConfig = {
+        // --- 1. CONFIGURATION & STATE ---
+        const fbConfigDefault = {
             apiKey: "AIzaSyAeW720p-jxvUKu4wGjltbV-7PzXXH2Lv8",
             authDomain: "tournament-64337.firebaseapp.com",
             databaseURL: "https://tournament-64337-default-rtdb.firebaseio.com",
@@ -248,59 +218,184 @@
             appId: "1:1001808716448:web:d2c23c00b78faebd329fc5"
         };
 
-        const audio = new (window.AudioContext || window.webkitAudioContext)();
+        let db = null;
+        let myTeamId = null;
+        let role = null;
+        let gameState = {
+            status: "waiting",
+            currentWord: "",
+            matches: [],
+            vocab: ["APPLE", "BANANA", "ORANGE"]
+        };
 
-        // --- Audio SFX ---
-        function snd(f, type, d) {
-            const osc = audio.createOscillator();
-            const g = audio.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(f, audio.currentTime);
-            g.gain.setValueAtTime(0.1, audio.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.01, audio.currentTime + d);
-            osc.connect(g); g.connect(audio.destination);
-            osc.start(); osc.stop(audio.currentTime + d);
-        }
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-        // --- Utils ---
-        function shuffle(arr) {
-            let a = [...arr];
-            for (let i = a.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [a[i], a[j]] = [a[j], a[i]];
-            }
-            return a;
-        }
-
-        // --- Firebase ---
-        function initFB(config) {
+        // --- 2. FIREBASE CORE ---
+        function initFirebase(config) {
+            document.getElementById('status-dot').style.background = "#2196F3"; // Blue: Connecting
             try {
                 if (!firebase.apps.length) firebase.initializeApp(config);
                 db = firebase.database();
-                statusDot.style.background = "#4CAF50"; // Green for connected
                 
-                db.ref('word_race_data').on('value', (snap) => {
+                db.ref('word_race_tourney').on('value', (snap) => {
                     const data = snap.val();
                     if (data) {
-                        state = data;
+                        gameState = data;
+                        document.getElementById('status-dot').style.background = "#4CAF50"; // Green: Synced
                         syncUI();
+                    } else {
+                        // DB is empty, host should initialize
+                        if (role === 'host') forceResetTournament();
                     }
+                }, (err) => {
+                    document.getElementById('status-dot').style.background = "#F44336"; // Red: Error
+                    console.error("Firebase Read Error:", err);
                 });
-            } catch(e) {
-                statusDot.style.background = "#F44336"; // Red for error
-                console.error(e);
+            } catch (e) {
+                document.getElementById('status-dot').style.background = "#F44336";
             }
         }
 
-        // --- Set Role ---
-        function setRole(r) {
-            myRole = r;
-            if (r === 'player') {
-                renderTeamGrid();
+        // --- 3. TOURNAMENT LOGIC ---
+        function forceResetTournament() {
+            const teams = [1,2,3,4,5,6].sort(() => Math.random() - 0.5);
+            const matches = [
+                { t1: teams[0], t2: teams[1], winner: null },
+                { t1: teams[2], t2: teams[3], winner: null },
+                { t1: teams[4], t2: teams[5], winner: null }
+            ];
+            db.ref('word_race_tourney').set({
+                status: "waiting",
+                currentWord: "",
+                matches: matches,
+                vocab: gameState.vocab || ["APPLE", "BANANA", "ORANGE"]
+            });
+        }
+
+        function forceNewRound() {
+            const word = gameState.vocab[Math.floor(Math.random() * gameState.vocab.length)];
+            const clearedMatches = gameState.matches.map(m => ({...m, winner: null}));
+            db.ref('word_race_tourney').update({
+                status: "playing",
+                currentWord: word,
+                matches: clearedMatches
+            });
+        }
+
+        // --- 4. PLAYER GAME ENGINE ---
+        function setupGame(word) {
+            const slots = document.getElementById('word-slots');
+            const sea = document.getElementById('letter-sea');
+            slots.innerHTML = ''; sea.innerHTML = '';
+            
+            let solvedIdx = 0;
+            const letters = word.split('');
+            
+            letters.forEach(() => {
+                const s = document.createElement('div');
+                s.className = 'slot';
+                slots.appendChild(s);
+            });
+
+            const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const pool = [...letters, alphabet[Math.floor(Math.random()*26)]].sort(() => Math.random() - 0.5);
+
+            pool.forEach(char => {
+                const bubble = document.createElement('div');
+                bubble.className = 'letter-bubble';
+                bubble.innerText = char;
+                bubble.style.left = (10 + Math.random() * 70) + '%';
+                bubble.style.top = (10 + Math.random() * 70) + '%';
+                
+                bubble.onclick = () => {
+                    if (char === word[solvedIdx]) {
+                        playTone(400 + (solvedIdx * 100), 0.1);
+                        slots.children[solvedIdx].innerText = char;
+                        slots.children[solvedIdx].style.borderColor = 'var(--success)';
+                        bubble.remove();
+                        solvedIdx++;
+                        if (solvedIdx === word.length) {
+                            playTone(800, 0.3);
+                            submitWin();
+                        }
+                    } else {
+                        playTone(150, 0.2);
+                        bubble.style.background = 'var(--danger)';
+                        setTimeout(() => bubble.style.background = 'var(--accent)', 400);
+                    }
+                };
+                sea.appendChild(bubble);
+            });
+        }
+
+        function submitWin() {
+            const matchIdx = gameState.matches.findIndex(m => m.t1 == myTeamId || m.t2 == myTeamId);
+            if (matchIdx > -1 && !gameState.matches[matchIdx].winner) {
+                db.ref(`word_race_tourney/matches/${matchIdx}/winner`).set(myTeamId);
+            }
+        }
+
+        // --- 5. UI SYNC ---
+        function syncUI() {
+            if (role === 'host') {
+                renderHostBracket();
+            } else if (role === 'player' && myTeamId) {
+                handlePlayerLogic();
+            }
+        }
+
+        function handlePlayerLogic() {
+            const match = gameState.matches.find(m => m.t1 == myTeamId || m.t2 == myTeamId);
+            if (!match || gameState.status !== 'playing' || match.winner) {
+                if (match && match.winner) {
+                    document.getElementById('wait-msg').innerText = (match.winner == myTeamId) ? "WINNER! 🏆" : "TOO SLOW! 💨";
+                } else {
+                    document.getElementById('wait-msg').innerText = "Get Ready...";
+                }
+                showScreen('screen-wait');
+                return;
+            }
+            setupGame(gameState.currentWord);
+            showScreen('screen-play');
+        }
+
+        function renderHostBracket() {
+            const container = document.getElementById('bracket-display');
+            container.innerHTML = '';
+            gameState.matches.forEach(m => {
+                const div = document.createElement('div');
+                div.className = 'matchup';
+                div.innerHTML = `
+                    <div class="team-box ${m.winner == m.t1 ? 'winner-box' : ''}">TEAM ${m.t1}</div>
+                    <div style="color:#aaa">VS</div>
+                    <div class="team-box ${m.winner == m.t2 ? 'winner-box' : ''}">TEAM ${m.t2}</div>
+                `;
+                container.appendChild(div);
+            });
+            document.getElementById('host-msg').innerText = gameState.status === 'playing' ? "RACE IN PROGRESS" : "Ready to Race!";
+        }
+
+        // --- 6. NAVIGATION & DASH ---
+        function initMode(m) {
+            role = m;
+            if (m === 'player') {
+                renderTeamSelection();
                 showScreen('screen-setup');
             } else {
                 showScreen('screen-host');
-                if (state.matches.length > 0) renderBracket();
+            }
+            initFirebase(fbConfigDefault);
+        }
+
+        function renderTeamSelection() {
+            const grid = document.getElementById('team-grid');
+            grid.innerHTML = '';
+            for(let i=1; i<=6; i++) {
+                const b = document.createElement('button');
+                b.className = 'btn';
+                b.innerText = `TEAM ${i}`;
+                b.onclick = () => { myTeamId = i; document.getElementById('player-title').innerText = `TEAM ${i}`; showScreen('screen-wait'); syncUI(); };
+                grid.appendChild(b);
             }
         }
 
@@ -309,184 +404,38 @@
             document.getElementById(id).classList.add('active');
         }
 
-        // --- Teacher Logic ---
-        function resetBracket() {
-            const teams = shuffle([1, 2, 3, 4, 5, 6]);
-            const matches = [
-                { t1: teams[0], t2: teams[1], winner: null },
-                { t1: teams[2], t2: teams[3], winner: null },
-                { t1: teams[4], t2: teams[5], winner: null }
-            ];
-            const updates = {
-                matches: matches,
-                status: 'waiting',
-                currentWord: ""
-            };
-            
-            if(db) db.ref('word_race_data').update(updates);
-            state = {...state, ...updates};
-            renderBracket();
-        }
-
-        function newRound() {
-            if (state.matches.length === 0) {
-                alert("Please click 'New Bracket' first!");
-                return;
-            }
-            const word = state.vocab[Math.floor(Math.random() * state.vocab.length)];
-            const resetWinners = state.matches.map(m => ({...m, winner: null}));
-            
-            const updates = {
-                currentWord: word,
-                status: 'playing',
-                matches: resetWinners
-            };
-
-            if(db) db.ref('word_race_data').update(updates);
-            state = {...state, ...updates};
-            syncUI();
-        }
-
-        function renderBracket() {
-            const container = document.getElementById('bracket-display');
-            container.innerHTML = '';
-            state.matches.forEach(m => {
-                const div = document.createElement('div');
-                div.className = 'matchup';
-                div.innerHTML = `
-                    <div class="team-box ${m.winner == m.t1 ? 'winner-box' : ''}">TEAM ${m.t1}</div>
-                    <div style="color:#aaa; font-size:1.2rem;">VS</div>
-                    <div class="team-box ${m.winner == m.t2 ? 'winner-box' : ''}">TEAM ${m.t2}</div>
-                `;
-                container.appendChild(div);
-            });
-            document.getElementById('host-msg').innerText = state.status === 'playing' ? `RACE WORD: ${state.currentWord}` : "Bracket Ready!";
-        }
-
-        // --- Player Game Logic ---
-        function renderTeamGrid() {
-            const grid = document.getElementById('team-grid');
-            grid.innerHTML = '';
-            for(let i=1; i<=6; i++) {
-                const b = document.createElement('button');
-                b.className = 'btn';
-                b.innerText = `TEAM ${i}`;
-                b.onclick = () => { 
-                    myTeam = i; 
-                    document.getElementById('player-title').innerText = `TEAM ${i}`;
-                    showScreen('screen-wait');
-                    syncUI();
-                };
-                grid.appendChild(b);
-            }
-        }
-
-        function setupPlayArea() {
-            const match = state.matches.find(m => m.t1 == myTeam || m.t2 == myTeam);
-            if (!match || state.status !== 'playing' || match.winner) {
-                if (match && match.winner) {
-                    document.getElementById('wait-msg').innerText = match.winner == myTeam ? "WINNER! 🏆" : "TOO SLOW! 💨";
-                } else {
-                    document.getElementById('wait-msg').innerText = "Wait for Teacher...";
-                }
-                showScreen('screen-wait');
-                return;
-            }
-
-            showScreen('screen-play');
-            const slots = document.getElementById('word-slots');
-            const sea = document.getElementById('letter-sea');
-            slots.innerHTML = ''; sea.innerHTML = '';
-            
-            let solvedIdx = 0;
-            const word = state.currentWord;
-            const chars = word.split('');
-            
-            chars.forEach(() => {
-                const s = document.createElement('div');
-                s.className = 'slot';
-                slots.appendChild(s);
-            });
-
-            const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            const pool = shuffle([...chars, alphabet[Math.floor(Math.random()*26)]]);
-            
-            pool.forEach(c => {
-                const bubble = document.createElement('div');
-                bubble.className = 'letter-bubble';
-                bubble.innerText = c;
-                bubble.style.left = (10 + Math.random() * 75) + '%';
-                bubble.style.top = (10 + Math.random() * 75) + '%';
-                
-                bubble.onclick = () => {
-                    if (c === word[solvedIdx]) {
-                        snd(400 + (solvedIdx * 100), 'sine', 0.1);
-                        slots.children[solvedIdx].innerText = c;
-                        slots.children[solvedIdx].style.borderColor = 'var(--success)';
-                        bubble.remove();
-                        solvedIdx++;
-                        if (solvedIdx === word.length) {
-                            snd(880, 'sine', 0.6);
-                            winMatch();
-                        }
-                    } else {
-                        snd(150, 'sawtooth', 0.3);
-                        bubble.style.background = 'var(--danger)';
-                        setTimeout(() => bubble.style.background = 'var(--accent)', 500);
-                    }
-                };
-                sea.appendChild(bubble);
-            });
-        }
-
-        function winMatch() {
-            const mIdx = state.matches.findIndex(m => m.t1 == myTeam || m.t2 == myTeam);
-            if (state.matches[mIdx].winner === null) {
-                if(db) db.ref(`word_race_data/matches/${mIdx}/winner`).set(myTeam);
-                // Local update if offline/laggy
-                state.matches[mIdx].winner = myTeam;
-                syncUI();
-            }
-        }
-
-        // --- Syncer ---
-        function syncUI() {
-            if (myRole === 'host') {
-                renderBracket();
-            } else if (myRole === 'player' && myTeam) {
-                setupPlayArea();
-            }
-        }
-
-        // --- Dashboard ---
         function toggleDash() {
             const m = document.getElementById('dash-modal');
             const o = document.getElementById('overlay');
-            const isVisible = m.style.display === 'block';
-            m.style.display = isVisible ? 'none' : 'block';
-            o.style.display = isVisible ? 'none' : 'block';
-            if(!isVisible) {
-                fbInput.value = JSON.stringify(savedConfig, null, 2);
-                vocabInput.value = state.vocab.join(', ');
+            const show = m.style.display === 'none' || m.style.display === '';
+            m.style.display = show ? 'block' : 'none';
+            o.style.display = show ? 'block' : 'none';
+            if (show) {
+                document.getElementById('fb-config').value = JSON.stringify(fbConfigDefault, null, 2);
+                document.getElementById('vocab-input').value = gameState.vocab.join(', ');
             }
         }
 
-        function applySettings() {
-            const vocab = vocabInput.value.split(',').map(v => v.trim().toUpperCase()).filter(v => v);
-            let config;
-            try {
-                config = JSON.parse(fbInput.value);
-                state.vocab = vocab;
-                initFB(config);
-                if(db) db.ref('word_race_data/vocab').set(vocab);
-                toggleDash();
-            } catch(e) {
-                alert("Invalid Firebase JSON!");
-            }
+        function saveConfig() {
+            const v = document.getElementById('vocab-input').value.split(',').map(x => x.trim().toUpperCase());
+            if (db) db.ref('word_race_tourney/vocab').set(v);
+            toggleDash();
         }
 
-        // Auto-run connection
-        window.onload = () => initFB(savedConfig);
+        function playTone(freq, dur) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
+            osc.start(); osc.stop(audioCtx.currentTime + dur);
+        }
+
+        window.onload = () => {
+            // Check status dot early
+            document.getElementById('status-dot').style.background = "#666";
+        };
     </script>
 </body>
 </html>
