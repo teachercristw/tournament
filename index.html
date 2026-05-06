@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ESL Word Race: Auto-Tournament</title>
+    <title>ESL Tournament: Name Race</title>
     
     <!-- CDNs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -54,155 +54,162 @@
             color: white;
             border: none;
             padding: 15px 30px;
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             border-radius: 50px;
             cursor: pointer;
             box-shadow: 0 8px #1565C0;
             transition: 0.1s;
             margin: 10px;
-            min-width: 280px;
-            min-height: 70px;
+            min-width: 200px;
         }
         .btn:active { transform: translateY(4px); box-shadow: 0 4px #1565C0; }
         .btn-orange { background: var(--primary); box-shadow: 0 8px #BF360C; }
         .btn-green { background: var(--success); box-shadow: 0 8px #1B5E20; }
 
-        /* Tournament Map */
-        .tournament-container {
+        input[type="text"] {
+            font-size: 2rem;
+            padding: 15px;
+            border-radius: 20px;
+            border: 4px solid var(--secondary);
+            text-align: center;
+            width: 80%;
+            max-width: 400px;
+            margin-bottom: 20px;
+            font-family: inherit;
+        }
+
+        /* Lobby & Bracket */
+        .lobby-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            width: 90%;
+            max-height: 50vh;
+            overflow-y: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 25px;
+            border: 5px dashed var(--secondary);
+        }
+        .player-tag {
+            background: var(--accent);
+            padding: 10px;
+            border-radius: 15px;
+            font-size: 1rem;
+            color: white;
+            animation: pop 0.3s ease;
+        }
+
+        .tournament-grid {
             display: flex;
-            flex-direction: row;
+            gap: 20px;
+            width: 100%;
             justify-content: center;
             align-items: center;
-            gap: 20px;
-            width: 95%;
-            margin-top: 20px;
+            overflow-x: auto;
+            padding: 20px;
         }
-        .round-col { display: flex; flex-direction: column; gap: 20px; flex: 1; }
         .match-card {
             background: white;
             border: 4px solid #ddd;
             border-radius: 15px;
             padding: 10px;
-            transition: 0.3s;
+            width: 180px;
+            margin-bottom: 10px;
         }
-        .match-active { border-color: var(--primary); box-shadow: 0 0 20px rgba(255,87,34,0.3); }
-        .team-row {
+        .match-active { border-color: var(--primary); box-shadow: 0 0 15px var(--primary); }
+        .slot {
             padding: 8px;
             margin: 4px;
             background: #f1f1f1;
-            border-radius: 8px;
-            font-size: 1.2rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
         }
-        .winner { background: var(--accent) !important; color: white; }
+        .slot.winner { background: var(--success) !important; color: white; }
 
-        /* Game Area */
-        #word-slots { display: flex; gap: 10px; margin-bottom: 30px; justify-content: center; flex-wrap: wrap; }
-        .slot {
-            width: 65px; height: 65px;
-            border: 4px dashed #ccc;
-            border-radius: 12px;
-            background: white;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 2.5rem;
-        }
+        /* Game Elements */
         #letter-sea {
             position: relative;
             width: 90vw; height: 40vh;
-            background: rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.6);
             border-radius: 30px;
             border: 4px solid var(--secondary);
             overflow: hidden;
+            margin-top: 20px;
         }
         .bubble {
             position: absolute;
-            width: 80px; height: 80px;
+            width: 70px; height: 70px;
             background: var(--accent);
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 2.5rem; color: white;
+            font-size: 2rem; color: white;
             box-shadow: 0 6px rgba(0,0,0,0.2);
             cursor: pointer;
         }
 
-        /* Utilities */
         #gear { position: fixed; top: 10px; right: 10px; font-size: 30px; cursor: pointer; z-index: 1000; opacity: 0.3; }
-        #status-bar { position: fixed; top: 10px; left: 10px; display: flex; gap: 10px; align-items: center; z-index: 1000; }
-        .dot { width: 15px; height: 15px; border-radius: 50%; background: #ccc; }
-        
-        #dash-modal {
-            display: none;
-            position: fixed;
-            top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 85%; max-width: 500px; background: white;
-            padding: 30px; border-radius: 30px; box-shadow: 0 0 100px rgba(0,0,0,0.5);
-            z-index: 1001;
-        }
-        .overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:999; }
+        @keyframes pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body>
 
-    <div id="status-bar">
-        <div id="dot-net" class="dot"></div>
-        <div id="dot-sync" class="dot"></div>
-    </div>
     <div id="gear" onclick="toggleDash()">⚙️</div>
 
     <div id="game-container">
-        <!-- Start -->
+        <!-- 1. Start/Entry -->
         <div id="screen-start" class="screen active">
-            <h1 style="font-size: 4rem; color: var(--primary);">WORD RACE</h1>
-            <p>Automatic Tournament System</p>
-            <button class="btn" onclick="initApp('host')">HOST (Smartboard)</button>
-            <button class="btn btn-orange" onclick="initApp('player')">PLAYER (iPad)</button>
+            <h1 style="font-size: 4rem; color: var(--primary);">NAME RACE</h1>
+            <button class="btn btn-green" onclick="setRole('host')">TEACHER (Smartboard)</button>
+            <button class="btn btn-orange" onclick="setRole('player')">STUDENT (iPad)</button>
         </div>
 
-        <!-- Team Selection -->
-        <div id="screen-setup" class="screen">
-            <h2>Select Your Team</h2>
-            <div id="team-grid" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:15px;"></div>
+        <!-- 2. Student Name Entry -->
+        <div id="screen-name-entry" class="screen">
+            <h2>Enter Your Name</h2>
+            <input type="text" id="student-name-input" placeholder="e.g. Alex" maxlength="12">
+            <button class="btn btn-green" onclick="joinLobby()">JOIN GAME</button>
         </div>
 
-        <!-- Host -->
-        <div id="screen-host" class="screen">
-            <h2 id="host-msg">Round 1</h2>
-            <div class="tournament-container">
-                <div class="round-col" id="col-r1"></div>
-                <div class="round-col" id="col-r2"></div>
-                <div class="round-col" id="col-r3"></div>
-            </div>
-            <div style="margin-top:20px;">
-                <button class="btn btn-green" onclick="triggerNextRace()">START RACE (Next Word)</button>
-                <button class="btn btn-orange" onclick="resetTournament()">RESET TOURNAMENT</button>
-            </div>
+        <!-- 3. Host Lobby -->
+        <div id="screen-host-lobby" class="screen">
+            <h1 id="lobby-count">Waiting for Students (0/30)</h1>
+            <div class="lobby-list" id="lobby-display"></div>
+            <button class="btn btn-green" id="start-tourney-btn" style="display:none;" onclick="startTournament()">START TOURNAMENT</button>
         </div>
 
-        <!-- Playing -->
+        <!-- 4. Tournament Bracket (Host) -->
+        <div id="screen-host-bracket" class="screen">
+            <h2 id="round-label">Tournament Bracket</h2>
+            <div class="tournament-grid" id="bracket-display"></div>
+            <button class="btn btn-orange" onclick="nextWord()">START NEXT RACE</button>
+            <button class="btn" onclick="resetAll()">RESET GAME</button>
+        </div>
+
+        <!-- 5. Student Play -->
         <div id="screen-play" class="screen">
-            <h2 id="play-team-label">TEAM X</h2>
-            <div id="word-slots"></div>
+            <h2 id="game-prompt">Spell the Word!</h2>
+            <div id="word-slots" style="display:flex; gap:10px; margin-bottom:20px;"></div>
             <div id="letter-sea"></div>
         </div>
 
-        <!-- Waiting -->
+        <!-- 6. Student Wait -->
         <div id="screen-wait" class="screen">
-            <h1 id="wait-msg">Wait for Race...</h1>
-            <p id="match-info">Your team is not in this round.</p>
-            <button class="btn" style="min-width: 100px; font-size: 1rem;" onclick="manualSync()">RE-SYNC DEVICE</button>
+            <h1 id="wait-status">Joined!</h1>
+            <p>Wait for the teacher to start the race.</p>
         </div>
     </div>
 
     <!-- Dash -->
     <div class="overlay" id="overlay" onclick="toggleDash()"></div>
-    <div id="dash-modal">
-        <h3>Teacher Dashboard</h3>
-        <p>Vocabulary (comma separated):</p>
-        <textarea id="vocab-list" style="width:100%; height:80px;">APPLE, BANANA, ORANGE, DRAGON, SCHOOL, HAPPY, SUMMER, KITTEN</textarea>
-        <br><br>
-        <button class="btn" style="min-width:100px; font-size:1.2rem;" onclick="saveDash()">SAVE & UPDATE</button>
+    <div id="dash-modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:30px; border-radius:30px; z-index:1001; width:80%;">
+        <h3>Settings</h3>
+        <textarea id="vocab-input" style="width:100%; height:100px;">APPLE, BANANA, CHERRY, DRAGON, EAGLE, FLOWER, GARDEN</textarea>
+        <button class="btn" onclick="saveDash()">SAVE</button>
     </div>
 
     <script>
+        // --- 1. CONFIG & STATE ---
         const fbConfig = {
             apiKey: "AIzaSyAeW720p-jxvUKu4wGjltbV-7PzXXH2Lv8",
             authDomain: "tournament-64337.firebaseapp.com",
@@ -213,8 +220,8 @@
             appId: "1:1001808716448:web:d2c23c00b78faebd329fc5"
         };
 
-        let db, role, myTeamId;
-        let localState = { status: "waiting", currentWord: "", bracket: {} };
+        let db, role, myName;
+        let localState = { players: {}, status: 'lobby', matches: [], currentWord: "" };
         const audio = new (window.AudioContext || window.webkitAudioContext)();
 
         function playTone(f, d) {
@@ -227,89 +234,140 @@
             o.start(); o.stop(audio.currentTime + d);
         }
 
-        function initApp(r) {
+        // --- 2. CORE LOGIC ---
+        function setRole(r) {
             role = r;
             if (!firebase.apps.length) firebase.initializeApp(fbConfig);
             db = firebase.database();
-            document.getElementById('dot-net').style.background = "#4CAF50";
-
-            db.ref('smart_tournament').on('value', (snap) => {
-                const data = snap.val();
-                if (data) {
-                    localState = data;
-                    document.getElementById('dot-sync').style.background = "#2196F3";
-                    setTimeout(() => document.getElementById('dot-sync').style.background = "#ccc", 500);
-                    refreshUI();
-                } else if (role === 'host') {
-                    resetTournament();
+            
+            db.ref('name_race_game').on('value', (snap) => {
+                const val = snap.val();
+                if (val) {
+                    localState = val;
+                    syncUI();
                 }
             });
 
-            if (role === 'player') {
-                renderTeamSelection();
-                navigate('screen-setup');
-            } else {
-                navigate('screen-host');
-            }
+            if (role === 'player') navigate('screen-name-entry');
+            else navigate('screen-host-lobby');
         }
 
-        function resetTournament() {
-            const teams = [1,2,3,4,5,6].sort(() => Math.random() - 0.5);
-            const bracket = {
-                r1: [ {t1: teams[0], t2: teams[1], win: null}, {t1: teams[2], t2: teams[3], win: null}, {t1: teams[4], t2: teams[5], win: null} ],
-                r2: [ {t1: null, t2: null, win: null} ],
-                r3: [ {t1: null, t2: null, win: null} ]
-            };
-            db.ref('smart_tournament').set({
-                status: "waiting",
-                currentWord: "",
-                vocab: document.getElementById('vocab-list').value.split(',').map(x => x.trim().toUpperCase()),
-                bracket: bracket
+        function joinLobby() {
+            const input = document.getElementById('student-name-input');
+            myName = input.value.trim();
+            if (!myName) return alert("Enter your name!");
+            
+            const pKey = db.ref('name_race_game/players').push().key;
+            db.ref('name_race_game/players/' + pKey).set({ name: myName, id: pKey });
+            navigate('screen-wait');
+        }
+
+        function startTournament() {
+            const playerArray = Object.values(localState.players || {});
+            if (playerArray.length < 2) return alert("Need at least 2 players!");
+            
+            // Fisher-Yates Shuffle
+            for (let i = playerArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [playerArray[i], playerArray[j]] = [playerArray[j], playerArray[i]];
+            }
+
+            // Build Bracket Matches
+            const matches = [];
+            for (let i = 0; i < playerArray.length; i += 2) {
+                matches.push({
+                    p1: playerArray[i],
+                    p2: playerArray[i+1] || { name: "BYE", id: "bye" },
+                    winner: (playerArray[i+1] ? null : playerArray[i].id)
+                });
+            }
+
+            db.ref('name_race_game').update({
+                status: 'bracket',
+                matches: matches,
+                round: 1
             });
         }
 
-        function triggerNextRace() {
-            const word = localState.vocab[Math.floor(Math.random() * localState.vocab.length)];
-            db.ref('smart_tournament').update({ status: "playing", currentWord: word });
+        function nextWord() {
+            const v = localState.vocab || ["APPLE", "BANANA"];
+            const word = v[Math.floor(Math.random() * v.length)];
+            db.ref('name_race_game').update({ status: 'playing', currentWord: word });
         }
 
-        function refreshUI() {
+        // --- 3. UI SYNCING ---
+        function syncUI() {
             if (role === 'host') {
-                renderHostBracket();
-            } else if (role === 'player' && myTeamId) {
-                const activeMatch = findCurrentMatch();
-                if (localState.status === "playing" && activeMatch && !activeMatch.win) {
-                    startMiniGame();
-                    navigate('screen-play');
+                if (localState.status === 'lobby') {
+                    renderLobby();
                 } else {
-                    updateWaitingText(activeMatch);
+                    renderBracket();
+                    navigate('screen-host-bracket');
+                }
+            } else {
+                if (localState.status === 'playing') {
+                    const myMatch = localState.matches.find(m => (m.p1.id === myNameId() || m.p2.id === myNameId()) && !m.winner);
+                    if (myMatch) {
+                        startMiniGame();
+                        navigate('screen-play');
+                    } else {
+                        updateStudentWait();
+                        navigate('screen-wait');
+                    }
+                } else if (localState.status === 'bracket') {
+                    updateStudentWait();
                     navigate('screen-wait');
                 }
             }
         }
 
-        function findCurrentMatch() {
-            const b = localState.bracket;
-            // Reverse search: Check Finals, then Semis, then Round 1
-            if (b.r3[0].t1 == myTeamId || b.r3[0].t2 == myTeamId) return b.r3[0];
-            if (b.r2[0].t1 == myTeamId || b.r2[0].t2 == myTeamId) return b.r2[0];
-            return b.r1.find(m => m.t1 == myTeamId || m.t2 == myTeamId);
+        function myNameId() {
+            return Object.values(localState.players || {}).find(p => p.name === myName)?.id;
         }
 
-        function updateWaitingText(match) {
-            const info = document.getElementById('match-info');
-            if (localState.status === "finished") {
-                document.getElementById('wait-msg').innerText = "Game Over!";
-                info.innerText = "Check the leaderboard on the Smartboard.";
-            } else if (match && match.win) {
-                document.getElementById('wait-msg').innerText = (match.win == myTeamId) ? "ROUND WON! 🏆" : "ROUND LOST 💨";
-                info.innerText = "Waiting for the next round to be generated...";
+        function renderLobby() {
+            const list = document.getElementById('lobby-display');
+            const players = Object.values(localState.players || {});
+            list.innerHTML = '';
+            players.forEach(p => {
+                const el = document.createElement('div');
+                el.className = 'player-tag';
+                el.innerText = p.name;
+                list.appendChild(el);
+            });
+            document.getElementById('lobby-count').innerText = `Students Joined: ${players.length}/30`;
+            document.getElementById('start-tourney-btn').style.display = players.length >= 2 ? 'block' : 'none';
+        }
+
+        function renderBracket() {
+            const display = document.getElementById('bracket-display');
+            display.innerHTML = '';
+            localState.matches.forEach(m => {
+                const div = document.createElement('div');
+                div.className = `match-card ${localState.status==='playing' && !m.winner ? 'match-active' : ''}`;
+                div.innerHTML = `
+                    <div class="slot ${m.winner === m.p1.id ? 'winner' : ''}">${m.p1.name}</div>
+                    <div class="slot ${m.winner === m.p2.id ? 'winner' : ''}">${m.p2.name}</div>
+                `;
+                display.appendChild(div);
+            });
+        }
+
+        function updateStudentWait() {
+            const statusText = document.getElementById('wait-status');
+            const myId = myNameId();
+            const match = localState.matches.find(m => m.p1.id === myId || m.p2.id === myId);
+            
+            if (!match) {
+                statusText.innerText = "Waiting for Round...";
+            } else if (match.winner) {
+                statusText.innerText = match.winner === myId ? "YOU WON! 🏆" : "Round Over";
             } else {
-                document.getElementById('wait-msg').innerText = "Wait for Teacher...";
-                info.innerText = "The race will start automatically when it is your turn.";
+                statusText.innerText = "Get Ready to Race!";
             }
         }
 
+        // --- 4. GAMEPLAY ---
         function startMiniGame() {
             const word = localState.currentWord;
             const slots = document.getElementById('word-slots');
@@ -317,29 +375,26 @@
             slots.innerHTML = ''; sea.innerHTML = '';
             let progress = 0;
 
-            document.getElementById('play-team-label').innerText = "TEAM " + myTeamId + " - Spell: " + word;
-
             word.split('').forEach(() => {
                 const s = document.createElement('div');
-                s.className = 'slot';
+                s.style = "width:50px; height:50px; border:3px solid #ccc; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:2rem; background:white;";
                 slots.appendChild(s);
             });
 
-            const letters = (word + "XYZ").split('').sort(() => Math.random() - 0.5);
-            letters.forEach(char => {
+            const chars = (word + "XYZ").split('').sort(() => Math.random() - 0.5);
+            chars.forEach(c => {
                 const b = document.createElement('div');
                 b.className = 'bubble';
-                b.innerText = char;
-                b.style.left = (5 + Math.random() * 80) + '%';
-                b.style.top = (5 + Math.random() * 80) + '%';
-                
+                b.innerText = c;
+                b.style.left = Math.random() * 80 + '%';
+                b.style.top = Math.random() * 80 + '%';
                 b.onclick = () => {
-                    if (char === word[progress]) {
-                        playTone(400 + (progress * 100), 0.1);
-                        slots.children[progress].innerText = char;
+                    if (c === word[progress]) {
+                        playTone(400 + (progress*100), 0.1);
+                        slots.children[progress].innerText = c;
                         b.remove();
                         progress++;
-                        if (progress === word.length) handleVictory();
+                        if (progress === word.length) submitWin();
                     } else {
                         playTone(150, 0.2);
                         b.style.background = "var(--danger)";
@@ -350,98 +405,39 @@
             });
         }
 
-        function handleVictory() {
-            playTone(800, 0.5);
-            let b = localState.bracket;
-            let winnerId = myTeamId;
-
-            // Determine which match we won and move up
-            for (let i = 0; i < 3; i++) {
-                if ((b.r1[i].t1 == winnerId || b.r1[i].t2 == winnerId) && !b.r1[i].win) {
-                    b.r1[i].win = winnerId;
-                    if (i === 0) b.r2[0].t1 = winnerId;
-                    if (i === 1) b.r2[0].t2 = winnerId;
-                    if (i === 2) b.r3[0].t1 = winnerId; // Bye to finals
-                    db.ref('smart_tournament/bracket').set(b);
-                    db.ref('smart_tournament/status').set("waiting");
-                    return;
-                }
-            }
-
-            if ((b.r2[0].t1 == winnerId || b.r2[0].t2 == winnerId) && !b.r2[0].win) {
-                b.r2[0].win = winnerId;
-                b.r3[0].t2 = winnerId;
-                db.ref('smart_tournament/bracket').set(b);
-                db.ref('smart_tournament/status').set("waiting");
-                return;
-            }
-
-            if ((b.r3[0].t1 == winnerId || b.r3[0].t2 == winnerId) && !b.r3[0].win) {
-                b.r3[0].win = winnerId;
-                db.ref('smart_tournament/bracket').set(b);
-                db.ref('smart_tournament/status').set("finished");
+        function submitWin() {
+            playTone(800, 0.4);
+            const myId = myNameId();
+            const mIdx = localState.matches.findIndex(m => (m.p1.id === myId || m.p2.id === myId) && !m.winner);
+            if (mIdx !== -1) {
+                db.ref(`name_race_game/matches/${mIdx}/winner`).set(myId);
+                db.ref(`name_race_game/status`).set('bracket');
             }
         }
 
-        function renderHostBracket() {
-            const r1 = document.getElementById('col-r1');
-            const r2 = document.getElementById('col-r2');
-            const r3 = document.getElementById('col-r3');
-            r1.innerHTML = '<h3>Qualifying</h3>';
-            r2.innerHTML = '<h3>Semi-Final</h3>';
-            r3.innerHTML = '<h3>Final</h3>';
-
-            localState.bracket.r1.forEach(m => r1.appendChild(createMatchEl(m)));
-            r2.appendChild(createMatchEl(localState.bracket.r2[0]));
-            r3.appendChild(createMatchEl(localState.bracket.r3[0]));
-        }
-
-        function createMatchEl(m) {
-            const card = document.createElement('div');
-            card.className = "match-card";
-            if (localState.status === "playing" && m.t1 && m.t2 && !m.win) card.classList.add('match-active');
-            card.innerHTML = `
-                <div class="team-row ${m.win == m.t1 ? 'winner' : ''}">${m.t1 ? 'Team '+m.t1 : '---'}</div>
-                <div class="team-row ${m.win == m.t2 ? 'winner' : ''}">${m.t2 ? 'Team '+m.t2 : '---'}</div>
-            `;
-            return card;
-        }
-
-        function renderTeamSelection() {
-            const grid = document.getElementById('team-grid');
-            grid.innerHTML = '';
-            for(let i=1; i<=6; i++) {
-                const b = document.createElement('button');
-                b.className = 'btn'; b.style.minWidth = '80px';
-                b.innerText = "T" + i;
-                b.onclick = () => { myTeamId = i; refreshUI(); };
-                grid.appendChild(b);
-            }
-        }
-
+        // --- 5. HELPERS ---
         function navigate(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
         }
 
         function toggleDash() {
-            const m = document.getElementById('dash-modal');
+            const d = document.getElementById('dash-modal');
             const o = document.getElementById('overlay');
-            const s = m.style.display === 'block';
-            m.style.display = s ? 'none' : 'block';
-            o.style.display = s ? 'none' : 'block';
+            const s = d.style.display === 'none';
+            d.style.display = s ? 'block' : 'none';
+            o.style.display = s ? 'block' : 'none';
         }
 
         function saveDash() {
-            const v = document.getElementById('vocab-list').value.split(',').map(x => x.trim().toUpperCase());
-            db.ref('smart_tournament/vocab').set(v);
+            const v = document.getElementById('vocab-input').value.split(',').map(x => x.trim().toUpperCase());
+            db.ref('name_race_game/vocab').set(v);
             toggleDash();
         }
 
-        function manualSync() {
-            db.ref('smart_tournament').get().then(snap => {
-                if (snap.exists()) { localState = snap.val(); refreshUI(); }
-            });
+        function resetAll() {
+            db.ref('name_race_game').set(null);
+            location.reload();
         }
     </script>
 </body>
