@@ -8,6 +8,7 @@
     <!-- CDNs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
     
     <style>
         :root {
@@ -26,205 +27,182 @@
             touch-action: none; 
             margin: 0; 
             overflow: hidden; 
-            font-family: 'Century Gothic', 'AppleGothic', 'Segoe UI', sans-serif;
+            font-family: 'Fredoka One', 'Century Gothic', 'AppleGothic', sans-serif;
             background-color: var(--bg);
             color: var(--text);
             font-weight: bold;
         }
 
-        /* --- Screens --- */
         .screen {
             display: none;
-            flex: 1;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 20px;
             text-align: center;
             height: 100vh;
+            width: 100vw;
             box-sizing: border-box;
+            position: absolute;
+            top: 0; left: 0;
         }
         .active { display: flex; }
 
-        /* --- UI Elements --- */
+        /* UI Elements */
         .btn {
             background: var(--secondary);
             color: white;
             border: none;
-            padding: 20px 45px;
-            font-size: 2rem;
-            border-radius: 60px;
+            padding: 15px 30px;
+            font-size: 1.8rem;
+            border-radius: 50px;
             cursor: pointer;
-            box-shadow: 0 10px #1565C0;
-            transition: all 0.1s;
-            margin: 15px;
-            min-width: 320px;
-            min-height: 85px;
+            box-shadow: 0 8px #1565C0;
+            transition: 0.1s;
+            margin: 10px;
+            min-width: 280px;
+            min-height: 70px;
         }
-        .btn:active { transform: translateY(4px); box-shadow: 0 6px #1565C0; }
-        .btn-orange { background: var(--primary); box-shadow: 0 10px #BF360C; }
-        .btn-green { background: var(--success); box-shadow: 0 10px #1B5E20; }
+        .btn:active { transform: translateY(4px); box-shadow: 0 4px #1565C0; }
+        .btn-orange { background: var(--primary); box-shadow: 0 8px #BF360C; }
+        .btn-green { background: var(--success); box-shadow: 0 8px #1B5E20; }
 
-        /* --- Automatic Bracket Visuals --- */
-        .tournament-map {
+        /* Tournament Map */
+        .tournament-container {
             display: flex;
             flex-direction: row;
             justify-content: center;
             align-items: center;
-            gap: 40px;
-            width: 100%;
+            gap: 20px;
+            width: 95%;
+            margin-top: 20px;
         }
-
-        .round-column {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-around;
-            height: 400px;
-        }
-
-        .matchup {
+        .round-col { display: flex; flex-direction: column; gap: 20px; flex: 1; }
+        .match-card {
             background: white;
-            border: 4px solid var(--secondary);
-            border-radius: 20px;
+            border: 4px solid #ddd;
+            border-radius: 15px;
             padding: 10px;
-            min-width: 180px;
-            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
-            position: relative;
-        }
-
-        .team-slot {
-            padding: 10px;
-            margin: 5px;
-            background: #e3f2fd;
-            border-radius: 10px;
-            font-size: 1.2rem;
             transition: 0.3s;
         }
+        .match-active { border-color: var(--primary); box-shadow: 0 0 20px rgba(255,87,34,0.3); }
+        .team-row {
+            padding: 8px;
+            margin: 4px;
+            background: #f1f1f1;
+            border-radius: 8px;
+            font-size: 1.2rem;
+        }
+        .winner { background: var(--accent) !important; color: white; }
 
-        .winner { background: var(--accent) !important; animation: pop 0.4s ease; }
-        .is-playing { border: 4px solid var(--primary); background: #fff5f2; }
-
-        /* --- Game Area --- */
-        #word-slots { display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; justify-content: center; }
+        /* Game Area */
+        #word-slots { display: flex; gap: 10px; margin-bottom: 30px; justify-content: center; flex-wrap: wrap; }
         .slot {
-            width: 70px; height: 70px;
-            border: 4px dashed #BDBDBD;
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
+            width: 65px; height: 65px;
+            border: 4px dashed #ccc;
+            border-radius: 12px;
             background: white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem;
         }
         #letter-sea {
             position: relative;
-            width: 90vw;
-            height: 40vh;
-            background: white;
-            border: 5px solid var(--secondary);
+            width: 90vw; height: 40vh;
+            background: rgba(255,255,255,0.5);
             border-radius: 30px;
+            border: 4px solid var(--secondary);
             overflow: hidden;
         }
-        .letter-bubble {
+        .bubble {
             position: absolute;
-            width: 90px; height: 90px;
+            width: 80px; height: 80px;
             background: var(--accent);
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            box-shadow: 0 8px rgba(0,0,0,0.2);
-            color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; color: white;
+            box-shadow: 0 6px rgba(0,0,0,0.2);
             cursor: pointer;
         }
 
-        /* --- Status Tools --- */
-        #gear { position: fixed; top: 15px; right: 15px; font-size: 40px; cursor: pointer; z-index: 1000; opacity: 0.2; }
-        #status-dot { position: fixed; top: 25px; left: 25px; width: 18px; height: 18px; border-radius: 50%; background: #666; z-index: 1000; border: 2px solid white; }
+        /* Utilities */
+        #gear { position: fixed; top: 10px; right: 10px; font-size: 30px; cursor: pointer; z-index: 1000; opacity: 0.3; }
+        #status-bar { position: fixed; top: 10px; left: 10px; display: flex; gap: 10px; align-items: center; z-index: 1000; }
+        .dot { width: 15px; height: 15px; border-radius: 50%; background: #ccc; }
         
         #dash-modal {
             display: none;
             position: fixed;
             top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 90%; max-width: 600px; background: white;
-            padding: 30px; border-radius: 30px; box-shadow: 0 0 150px rgba(0,0,0,0.8);
+            width: 85%; max-width: 500px; background: white;
+            padding: 30px; border-radius: 30px; box-shadow: 0 0 100px rgba(0,0,0,0.5);
             z-index: 1001;
         }
-        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999; }
-
-        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        .overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:999; }
     </style>
 </head>
 <body>
 
-    <div id="status-dot"></div>
+    <div id="status-bar">
+        <div id="dot-net" class="dot"></div>
+        <div id="dot-sync" class="dot"></div>
+    </div>
     <div id="gear" onclick="toggleDash()">⚙️</div>
 
     <div id="game-container">
-        <!-- Start Screen -->
+        <!-- Start -->
         <div id="screen-start" class="screen active">
-            <h1 style="font-size: 4rem; color: var(--primary); margin:0;">AUTO-BRACKET RACE</h1>
-            <button class="btn" onclick="initMode('host')">TEACHER (Smartboard)</button>
-            <button class="btn btn-orange" onclick="initMode('player')">TEAM (iPad)</button>
+            <h1 style="font-size: 4rem; color: var(--primary);">WORD RACE</h1>
+            <p>Automatic Tournament System</p>
+            <button class="btn" onclick="initApp('host')">HOST (Smartboard)</button>
+            <button class="btn btn-orange" onclick="initApp('player')">PLAYER (iPad)</button>
         </div>
 
         <!-- Team Selection -->
         <div id="screen-setup" class="screen">
-            <h1>Select Your Team</h1>
-            <div id="team-grid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px;"></div>
+            <h2>Select Your Team</h2>
+            <div id="team-grid" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:15px;"></div>
         </div>
 
-        <!-- Host Bracket Display -->
+        <!-- Host -->
         <div id="screen-host" class="screen">
-            <h1 id="host-msg">Round 1: Qualifying</h1>
-            
-            <div class="tournament-map">
-                <div class="round-column" id="round1-ui">
-                    <!-- 3 matches for Round 1 -->
-                </div>
-                <div class="round-column" id="round2-ui">
-                    <!-- Semi finals -->
-                </div>
-                <div class="round-column" id="round3-ui">
-                    <!-- Grand Final -->
-                </div>
+            <h2 id="host-msg">Round 1</h2>
+            <div class="tournament-container">
+                <div class="round-col" id="col-r1"></div>
+                <div class="round-col" id="col-r2"></div>
+                <div class="round-col" id="col-r3"></div>
             </div>
-
-            <div style="margin-top: 30px;">
-                <button class="btn btn-green" onclick="startWordRace()">START RACE (Next Word)</button>
-                <button class="btn btn-orange" onclick="fullReset()">RESET ENTIRE TOURNAMENT</button>
+            <div style="margin-top:20px;">
+                <button class="btn btn-green" onclick="triggerNextRace()">START RACE (Next Word)</button>
+                <button class="btn btn-orange" onclick="resetTournament()">RESET TOURNAMENT</button>
             </div>
         </div>
 
-        <!-- Player Game Screen -->
+        <!-- Playing -->
         <div id="screen-play" class="screen">
-            <h2 id="player-title">TEAM</h2>
+            <h2 id="play-team-label">TEAM X</h2>
             <div id="word-slots"></div>
             <div id="letter-sea"></div>
         </div>
 
-        <!-- Waiting for Host -->
+        <!-- Waiting -->
         <div id="screen-wait" class="screen">
-            <h1 id="wait-msg">Wait for Teacher...</h1>
-            <p>Your team will join when it's your turn!</p>
+            <h1 id="wait-msg">Wait for Race...</h1>
+            <p id="match-info">Your team is not in this round.</p>
+            <button class="btn" style="min-width: 100px; font-size: 1rem;" onclick="manualSync()">RE-SYNC DEVICE</button>
         </div>
     </div>
 
     <!-- Dash -->
     <div class="overlay" id="overlay" onclick="toggleDash()"></div>
     <div id="dash-modal">
-        <h3>Tournament Control</h3>
-        <label>Vocabulary (comma separated):</label><br>
-        <textarea id="vocab-input" style="width:100%; height:80px;">APPLE, BANANA, ORANGE, DRAGON, SCHOOL, HAPPY, SUMMER, KITTEN</textarea>
-        <div style="margin-top:20px;">
-            <button class="btn" style="min-width:120px; font-size:1.2rem;" onclick="saveDash()">SAVE</button>
-            <button class="btn btn-orange" style="min-width:120px; font-size:1.2rem;" onclick="toggleDash()">CLOSE</button>
-        </div>
+        <h3>Teacher Dashboard</h3>
+        <p>Vocabulary (comma separated):</p>
+        <textarea id="vocab-list" style="width:100%; height:80px;">APPLE, BANANA, ORANGE, DRAGON, SCHOOL, HAPPY, SUMMER, KITTEN</textarea>
+        <br><br>
+        <button class="btn" style="min-width:100px; font-size:1.2rem;" onclick="saveDash()">SAVE & UPDATE</button>
     </div>
 
     <script>
-        // --- 1. SETTINGS & FB ---
         const fbConfig = {
             apiKey: "AIzaSyAeW720p-jxvUKu4wGjltbV-7PzXXH2Lv8",
             authDomain: "tournament-64337.firebaseapp.com",
@@ -235,208 +213,133 @@
             appId: "1:1001808716448:web:d2c23c00b78faebd329fc5"
         };
 
-        let db = null;
-        let myTeamId = null;
-        let role = null;
-        let gameState = {
-            status: "waiting",
-            currentWord: "",
-            vocab: [],
-            bracket: {
-                r1: [ {t1:null, t2:null, win:null}, {t1:null, t2:null, win:null}, {t1:null, t2:null, win:null} ],
-                r2: [ {t1:null, t2:null, win:null} ], // Semi (1 bye from R1, 2 winners)
-                r3: [ {t1:null, t2:null, win:null} ]  // Final
-            }
-        };
-
+        let db, role, myTeamId;
+        let localState = { status: "waiting", currentWord: "", bracket: {} };
         const audio = new (window.AudioContext || window.webkitAudioContext)();
 
-        // --- 2. FIREBASE INIT ---
-        function initMode(m) {
-            role = m;
+        function playTone(f, d) {
+            const o = audio.createOscillator();
+            const g = audio.createGain();
+            o.connect(g); g.connect(audio.destination);
+            o.frequency.value = f;
+            g.gain.setValueAtTime(0.1, audio.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.01, audio.currentTime + d);
+            o.start(); o.stop(audio.currentTime + d);
+        }
+
+        function initApp(r) {
+            role = r;
             if (!firebase.apps.length) firebase.initializeApp(fbConfig);
             db = firebase.database();
-            
-            db.ref('auto_bracket_race').on('value', (snap) => {
-                const val = snap.val();
-                if (val) {
-                    gameState = val;
-                    document.getElementById('status-dot').style.background = "#4CAF50";
-                    syncUI();
+            document.getElementById('dot-net').style.background = "#4CAF50";
+
+            db.ref('smart_tournament').on('value', (snap) => {
+                const data = snap.val();
+                if (data) {
+                    localState = data;
+                    document.getElementById('dot-sync').style.background = "#2196F3";
+                    setTimeout(() => document.getElementById('dot-sync').style.background = "#ccc", 500);
+                    refreshUI();
                 } else if (role === 'host') {
-                    fullReset();
+                    resetTournament();
                 }
             });
 
-            if (m === 'player') {
+            if (role === 'player') {
                 renderTeamSelection();
-                showScreen('screen-setup');
+                navigate('screen-setup');
             } else {
-                showScreen('screen-host');
+                navigate('screen-host');
             }
         }
 
-        // --- 3. TOURNAMENT LOGIC ---
-        function fullReset() {
+        function resetTournament() {
             const teams = [1,2,3,4,5,6].sort(() => Math.random() - 0.5);
-            const r1 = [
-                { t1: teams[0], t2: teams[1], win: null },
-                { t1: teams[2], t2: teams[3], win: null },
-                { t1: teams[4], t2: teams[5], win: null }
-            ];
-            const r2 = [
-                { t1: null, t2: null, win: null }, // Match winner r1[0] vs r1[1]
-                { t1: null, t2: null, win: null }  // Match winner r1[2] vs winner r2[0] - handles bye logic later
-            ];
-
-            db.ref('auto_bracket_race').set({
+            const bracket = {
+                r1: [ {t1: teams[0], t2: teams[1], win: null}, {t1: teams[2], t2: teams[3], win: null}, {t1: teams[4], t2: teams[5], win: null} ],
+                r2: [ {t1: null, t2: null, win: null} ],
+                r3: [ {t1: null, t2: null, win: null} ]
+            };
+            db.ref('smart_tournament').set({
                 status: "waiting",
                 currentWord: "",
-                vocab: document.getElementById('vocab-input').value.split(',').map(x=>x.trim().toUpperCase()),
-                bracket: {
-                    r1: r1,
-                    r2: [ {t1: null, t2: null, win: null} ],
-                    r3: [ {t1: null, t2: null, win: null} ]
-                }
+                vocab: document.getElementById('vocab-list').value.split(',').map(x => x.trim().toUpperCase()),
+                bracket: bracket
             });
         }
 
-        function startWordRace() {
-            const words = gameState.vocab || ["APPLE", "BANANA"];
-            const word = words[Math.floor(Math.random() * words.length)];
-            db.ref('auto_bracket_race').update({
-                status: "playing",
-                currentWord: word
-            });
+        function triggerNextRace() {
+            const word = localState.vocab[Math.floor(Math.random() * localState.vocab.length)];
+            db.ref('smart_tournament').update({ status: "playing", currentWord: word });
         }
 
-        // Progression Logic: When someone wins, determine where they go next
-        function handleWinProgression(winnerId) {
-            let b = gameState.bracket;
-
-            // Round 1 Logic
-            for (let i = 0; i < 3; i++) {
-                if ((b.r1[i].t1 == winnerId || b.r1[i].t2 == winnerId) && b.r1[i].win == null) {
-                    b.r1[i].win = winnerId;
-                    
-                    // If winner of match 0 or 1, move to Semi R2 Match 0
-                    if (i == 0) b.r2[0].t1 = winnerId;
-                    if (i == 1) b.r2[0].t2 = winnerId;
-                    
-                    // If winner of match 2, they get a "Bye" to R3 or R2 slot 1
-                    if (i == 2) b.r3[0].t1 = winnerId; 
-                    
-                    db.ref('auto_bracket_race/bracket').set(b);
-                    return;
-                }
-            }
-
-            // Round 2 (Semi) Logic
-            if (b.r2[0].win == null && (b.r2[0].t1 == winnerId || b.r2[0].t2 == winnerId)) {
-                b.r2[0].win = winnerId;
-                b.r3[0].t2 = winnerId;
-                db.ref('auto_bracket_race/bracket').set(b);
-                return;
-            }
-
-            // Final Logic
-            if (b.r3[0].win == null && (b.r3[0].t1 == winnerId || b.r3[0].t2 == winnerId)) {
-                b.r3[0].win = winnerId;
-                db.ref('auto_bracket_race/bracket').set(b);
-                db.ref('auto_bracket_race/status').set("finished");
-            }
-        }
-
-        // --- 4. UI SYNC ---
-        function syncUI() {
+        function refreshUI() {
             if (role === 'host') {
                 renderHostBracket();
             } else if (role === 'player' && myTeamId) {
-                const activeMatch = findMyMatch();
-                if (gameState.status === 'playing' && activeMatch && activeMatch.win === null) {
-                    setupPlayArea(gameState.currentWord);
-                    showScreen('screen-play');
+                const activeMatch = findCurrentMatch();
+                if (localState.status === "playing" && activeMatch && !activeMatch.win) {
+                    startMiniGame();
+                    navigate('screen-play');
                 } else {
-                    if (gameState.status === "finished") {
-                        document.getElementById('wait-msg').innerText = "Tournament Over!";
-                    } else if (activeMatch && activeMatch.win) {
-                        document.getElementById('wait-msg').innerText = activeMatch.win == myTeamId ? "YOU WON THIS ROUND! 🏆" : "Too slow! 💨";
-                    } else {
-                        document.getElementById('wait-msg').innerText = "Waiting for your Turn...";
-                    }
-                    showScreen('screen-wait');
+                    updateWaitingText(activeMatch);
+                    navigate('screen-wait');
                 }
             }
         }
 
-        function findMyMatch() {
-            const b = gameState.bracket;
-            // Check R3 first (priority)
+        function findCurrentMatch() {
+            const b = localState.bracket;
+            // Reverse search: Check Finals, then Semis, then Round 1
             if (b.r3[0].t1 == myTeamId || b.r3[0].t2 == myTeamId) return b.r3[0];
-            // Check R2
             if (b.r2[0].t1 == myTeamId || b.r2[0].t2 == myTeamId) return b.r2[0];
-            // Check R1
             return b.r1.find(m => m.t1 == myTeamId || m.t2 == myTeamId);
         }
 
-        function renderHostBracket() {
-            const r1 = document.getElementById('round1-ui');
-            const r2 = document.getElementById('round2-ui');
-            const r3 = document.getElementById('round3-ui');
-            
-            r1.innerHTML = '<h3>Round 1</h3>';
-            gameState.bracket.r1.forEach(m => r1.appendChild(createMatchEl(m)));
-
-            r2.innerHTML = '<h3>Semi Final</h3>';
-            r2.appendChild(createMatchEl(gameState.bracket.r2[0]));
-
-            r3.innerHTML = '<h3>Grand Final</h3>';
-            r3.appendChild(createMatchEl(gameState.bracket.r3[0]));
-            
-            document.getElementById('host-msg').innerText = gameState.status === 'playing' ? "Current Word: " + gameState.currentWord : "Auto Tournament";
+        function updateWaitingText(match) {
+            const info = document.getElementById('match-info');
+            if (localState.status === "finished") {
+                document.getElementById('wait-msg').innerText = "Game Over!";
+                info.innerText = "Check the leaderboard on the Smartboard.";
+            } else if (match && match.win) {
+                document.getElementById('wait-msg').innerText = (match.win == myTeamId) ? "ROUND WON! 🏆" : "ROUND LOST 💨";
+                info.innerText = "Waiting for the next round to be generated...";
+            } else {
+                document.getElementById('wait-msg').innerText = "Wait for Teacher...";
+                info.innerText = "The race will start automatically when it is your turn.";
+            }
         }
 
-        function createMatchEl(m) {
-            const div = document.createElement('div');
-            div.className = 'matchup';
-            if (gameState.status === 'playing' && m.t1 && m.t2 && m.win === null) div.classList.add('is-playing');
-            div.innerHTML = `
-                <div class="team-slot ${m.win == m.t1 ? 'winner' : ''}">${m.t1 ? 'Team '+m.t1 : '???'}</div>
-                <div class="team-slot ${m.win == m.t2 ? 'winner' : ''}">${m.t2 ? 'Team '+m.t2 : '???'}</div>
-            `;
-            return div;
-        }
-
-        // --- 5. PLAYER GAME ---
-        function setupPlayArea(word) {
+        function startMiniGame() {
+            const word = localState.currentWord;
             const slots = document.getElementById('word-slots');
             const sea = document.getElementById('letter-sea');
             slots.innerHTML = ''; sea.innerHTML = '';
-            let currentIdx = 0;
-            
+            let progress = 0;
+
+            document.getElementById('play-team-label').innerText = "TEAM " + myTeamId + " - Spell: " + word;
+
             word.split('').forEach(() => {
                 const s = document.createElement('div');
                 s.className = 'slot';
                 slots.appendChild(s);
             });
 
-            const pool = [...word.split(''), 'X', 'Z'].sort(() => Math.random() - 0.5);
-            pool.forEach(c => {
+            const letters = (word + "XYZ").split('').sort(() => Math.random() - 0.5);
+            letters.forEach(char => {
                 const b = document.createElement('div');
-                b.className = 'letter-bubble';
-                b.innerText = c;
-                b.style.left = (Math.random() * 80) + '%';
-                b.style.top = (Math.random() * 70) + '%';
+                b.className = 'bubble';
+                b.innerText = char;
+                b.style.left = (5 + Math.random() * 80) + '%';
+                b.style.top = (5 + Math.random() * 80) + '%';
+                
                 b.onclick = () => {
-                    if (c === word[currentIdx]) {
-                        playTone(400 + (currentIdx*100), 0.1);
-                        slots.children[currentIdx].innerText = c;
+                    if (char === word[progress]) {
+                        playTone(400 + (progress * 100), 0.1);
+                        slots.children[progress].innerText = char;
                         b.remove();
-                        currentIdx++;
-                        if (currentIdx === word.length) {
-                            playTone(800, 0.4);
-                            handleWinProgression(myTeamId);
-                        }
+                        progress++;
+                        if (progress === word.length) handleVictory();
                     } else {
                         playTone(150, 0.2);
                         b.style.background = "var(--danger)";
@@ -447,20 +350,76 @@
             });
         }
 
-        // --- 6. UTILS ---
+        function handleVictory() {
+            playTone(800, 0.5);
+            let b = localState.bracket;
+            let winnerId = myTeamId;
+
+            // Determine which match we won and move up
+            for (let i = 0; i < 3; i++) {
+                if ((b.r1[i].t1 == winnerId || b.r1[i].t2 == winnerId) && !b.r1[i].win) {
+                    b.r1[i].win = winnerId;
+                    if (i === 0) b.r2[0].t1 = winnerId;
+                    if (i === 1) b.r2[0].t2 = winnerId;
+                    if (i === 2) b.r3[0].t1 = winnerId; // Bye to finals
+                    db.ref('smart_tournament/bracket').set(b);
+                    db.ref('smart_tournament/status').set("waiting");
+                    return;
+                }
+            }
+
+            if ((b.r2[0].t1 == winnerId || b.r2[0].t2 == winnerId) && !b.r2[0].win) {
+                b.r2[0].win = winnerId;
+                b.r3[0].t2 = winnerId;
+                db.ref('smart_tournament/bracket').set(b);
+                db.ref('smart_tournament/status').set("waiting");
+                return;
+            }
+
+            if ((b.r3[0].t1 == winnerId || b.r3[0].t2 == winnerId) && !b.r3[0].win) {
+                b.r3[0].win = winnerId;
+                db.ref('smart_tournament/bracket').set(b);
+                db.ref('smart_tournament/status').set("finished");
+            }
+        }
+
+        function renderHostBracket() {
+            const r1 = document.getElementById('col-r1');
+            const r2 = document.getElementById('col-r2');
+            const r3 = document.getElementById('col-r3');
+            r1.innerHTML = '<h3>Qualifying</h3>';
+            r2.innerHTML = '<h3>Semi-Final</h3>';
+            r3.innerHTML = '<h3>Final</h3>';
+
+            localState.bracket.r1.forEach(m => r1.appendChild(createMatchEl(m)));
+            r2.appendChild(createMatchEl(localState.bracket.r2[0]));
+            r3.appendChild(createMatchEl(localState.bracket.r3[0]));
+        }
+
+        function createMatchEl(m) {
+            const card = document.createElement('div');
+            card.className = "match-card";
+            if (localState.status === "playing" && m.t1 && m.t2 && !m.win) card.classList.add('match-active');
+            card.innerHTML = `
+                <div class="team-row ${m.win == m.t1 ? 'winner' : ''}">${m.t1 ? 'Team '+m.t1 : '---'}</div>
+                <div class="team-row ${m.win == m.t2 ? 'winner' : ''}">${m.t2 ? 'Team '+m.t2 : '---'}</div>
+            `;
+            return card;
+        }
+
         function renderTeamSelection() {
             const grid = document.getElementById('team-grid');
             grid.innerHTML = '';
             for(let i=1; i<=6; i++) {
                 const b = document.createElement('button');
-                b.className = 'btn'; b.style.minWidth = '100px';
-                b.innerText = `TEAM ${i}`;
-                b.onclick = () => { myTeamId = i; document.getElementById('player-title').innerText = `TEAM ${i}`; showScreen('screen-wait'); syncUI(); };
+                b.className = 'btn'; b.style.minWidth = '80px';
+                b.innerText = "T" + i;
+                b.onclick = () => { myTeamId = i; refreshUI(); };
                 grid.appendChild(b);
             }
         }
 
-        function showScreen(id) {
+        function navigate(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
         }
@@ -468,25 +427,21 @@
         function toggleDash() {
             const m = document.getElementById('dash-modal');
             const o = document.getElementById('overlay');
-            const show = m.style.display === 'none' || m.style.display === '';
-            m.style.display = show ? 'block' : 'none';
-            o.style.display = show ? 'block' : 'none';
+            const s = m.style.display === 'block';
+            m.style.display = s ? 'none' : 'block';
+            o.style.display = s ? 'none' : 'block';
         }
 
         function saveDash() {
-            const v = document.getElementById('vocab-input').value.split(',').map(x=>x.trim().toUpperCase());
-            if (db) db.ref('auto_bracket_race/vocab').set(v);
+            const v = document.getElementById('vocab-list').value.split(',').map(x => x.trim().toUpperCase());
+            db.ref('smart_tournament/vocab').set(v);
             toggleDash();
         }
 
-        function playTone(freq, dur) {
-            const osc = audio.createOscillator();
-            const gain = audio.createGain();
-            osc.connect(gain); gain.connect(audio.destination);
-            osc.frequency.value = freq;
-            gain.gain.setValueAtTime(0.1, audio.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audio.currentTime + dur);
-            osc.start(); osc.stop(audio.currentTime + dur);
+        function manualSync() {
+            db.ref('smart_tournament').get().then(snap => {
+                if (snap.exists()) { localState = snap.val(); refreshUI(); }
+            });
         }
     </script>
 </body>
