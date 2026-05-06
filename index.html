@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
     
     <style>
+        /* CSS Variables for highly colorful, high-contrast UI */
         :root {
             --primary: #FF5722;
             --secondary: #2196F3;
@@ -21,6 +22,7 @@
             --text: #2C3E50;
         }
 
+        /* Mandatory CSS Constraints for Smartboards/Tablets */
         body { 
             user-select: none; 
             -webkit-user-select: none; 
@@ -33,6 +35,7 @@
             font-weight: bold;
         }
 
+        /* Screen Management */
         .screen {
             display: none;
             flex-direction: column;
@@ -48,40 +51,42 @@
         }
         .active { display: flex; }
 
-        /* UI Elements */
+        /* UI Elements - Large, forgiving hit areas */
         .btn {
             background: var(--secondary);
             color: white;
             border: none;
-            padding: 15px 35px;
-            font-size: 1.5rem;
+            padding: 20px 40px;
+            font-size: 1.8rem;
             border-radius: 50px;
             cursor: pointer;
             box-shadow: 0 8px #1565C0;
             transition: 0.1s;
             margin: 10px;
-            min-width: 200px;
+            min-width: 250px;
+            min-height: 60px; /* Minimum hit area satisfied */
         }
         .btn:active { transform: translateY(4px); box-shadow: 0 4px #1565C0; }
         .btn-orange { background: var(--primary); box-shadow: 0 8px #BF360C; }
         .btn-green { background: var(--success); box-shadow: 0 8px #1B5E20; }
+        .btn-disabled { background: #B0BEC5 !important; box-shadow: 0 8px #78909C !important; cursor: not-allowed; }
 
         input[type="text"] {
-            font-size: 2rem;
-            padding: 15px;
+            font-size: 2.5rem;
+            padding: 20px;
             border-radius: 20px;
-            border: 4px solid var(--secondary);
+            border: 5px solid var(--secondary);
             text-align: center;
             width: 80%;
-            max-width: 400px;
-            margin-bottom: 20px;
+            max-width: 500px;
+            margin-bottom: 30px;
             font-family: inherit;
         }
 
         /* Lobby Display */
         .lobby-container {
-            width: 90%;
-            max-width: 800px;
+            width: 95%;
+            max-width: 900px;
             background: white;
             border-radius: 30px;
             padding: 30px;
@@ -92,9 +97,9 @@
 
         .lobby-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
             gap: 15px;
-            max-height: 40vh;
+            max-height: 45vh;
             overflow-y: auto;
             padding: 10px;
         }
@@ -102,58 +107,64 @@
         .name-card {
             background: var(--accent);
             color: white;
-            padding: 12px;
+            padding: 15px;
             border-radius: 15px;
-            font-size: 1.2rem;
+            font-size: 1.5rem;
             text-transform: capitalize;
-            animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            box-shadow: 0 4px 0px #d4a017;
+            animation: bounceIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 5px 0px #d4a017;
+            text-shadow: 1px 1px 0px rgba(0,0,0,0.2);
         }
 
         /* Bracket Styles */
         .bracket-container {
             display: flex;
-            gap: 40px;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
             align-items: center;
-            overflow-x: auto;
-            padding: 40px;
+            overflow-y: auto;
+            max-height: 60vh;
+            padding: 20px;
             width: 100%;
         }
 
         .match-card {
             background: white;
-            border: 4px solid #ccc;
+            border: 5px solid #ccc;
             border-radius: 20px;
             padding: 15px;
-            width: 200px;
+            width: 220px;
             position: relative;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
-        .match-active { border-color: var(--primary); box-shadow: 0 0 20px var(--primary); }
+        .match-active { border-color: var(--primary); box-shadow: 0 0 25px rgba(255, 87, 34, 0.5); }
         
         .p-slot {
-            padding: 10px;
-            margin: 5px 0;
+            padding: 12px;
+            margin: 6px 0;
             background: #f0f0f0;
-            border-radius: 10px;
-            font-size: 1rem;
+            border-radius: 12px;
+            font-size: 1.2rem;
         }
-        .p-winner { background: var(--success) !important; color: white; }
+        .p-winner { background: var(--success) !important; color: white; animation: bounceIn 0.3s; }
 
-        /* Game Elements */
-        #word-slots { display: flex; gap: 10px; margin-bottom: 30px; }
+        /* Mini Game Elements */
+        #word-slots { display: flex; gap: 12px; margin-bottom: 30px; flex-wrap: wrap; justify-content: center; }
         .slot {
-            width: 70px; height: 70px;
+            width: 80px; height: 80px;
             border: 5px dashed #ccc;
             border-radius: 15px;
             background: white;
             display: flex; align-items: center; justify-content: center;
-            font-size: 3rem;
+            font-size: 3.5rem;
+            text-transform: uppercase;
         }
         #letter-sea {
             position: relative;
-            width: 90vw; height: 40vh;
-            background: rgba(255,255,255,0.7);
-            border: 5px solid var(--secondary);
+            width: 95vw; height: 45vh;
+            background: rgba(255,255,255,0.8);
+            border: 6px solid var(--secondary);
             border-radius: 40px;
             overflow: hidden;
         }
@@ -163,12 +174,28 @@
             background: var(--accent);
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 3rem; color: white;
+            font-size: 3.5rem; color: white;
             box-shadow: 0 8px rgba(0,0,0,0.2);
             cursor: pointer;
+            text-transform: uppercase;
         }
 
-        #gear { position: fixed; top: 15px; right: 15px; font-size: 35px; cursor: pointer; opacity: 0.3; z-index: 1000; }
+        /* Utilities & Dashboard */
+        #gear { position: fixed; top: 20px; right: 20px; font-size: 40px; cursor: pointer; opacity: 0.4; z-index: 1000; transition: 0.2s;}
+        #gear:hover { opacity: 1; }
+        #status-indicator { position: fixed; top: 20px; left: 20px; padding: 10px 20px; border-radius: 30px; font-size: 1rem; color: white; background: #999; z-index: 1000;}
+
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999; }
+        .modal {
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; padding: 40px; border-radius: 30px; z-index: 1001;
+            width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;
+        }
+
+        .dash-section { text-align: left; margin-bottom: 20px; }
+        .dash-section label { color: var(--primary); font-size: 1.2rem; }
+        .dash-section textarea { width: 100%; border-radius: 10px; padding: 10px; border: 3px solid #ccc; font-family: monospace; font-size: 1rem; box-sizing: border-box; }
+
         @keyframes bounceIn {
             from { opacity: 0; transform: scale(0.3); }
             to { opacity: 1; transform: scale(1); }
@@ -177,158 +204,278 @@
 </head>
 <body>
 
+    <div id="status-indicator">Connecting...</div>
     <div id="gear" onclick="toggleDash()">⚙️</div>
 
     <div id="game-container">
+        
         <!-- 1. Start Screen -->
         <div id="screen-start" class="screen active">
-            <h1 style="font-size: 5rem; color: var(--primary); margin:0;">WORD RACE</h1>
-            <p style="font-size: 1.5rem;">The Ultimate Tournament</p>
+            <h1 style="font-size: 6rem; color: var(--primary); margin:0; text-shadow: 3px 3px 0px white;">WORD RACE</h1>
+            <p style="font-size: 2rem; color: var(--secondary); margin-bottom: 40px;">Classroom Tournament</p>
             <button class="btn btn-green" onclick="setRole('host')">TEACHER (Smartboard)</button>
             <button class="btn btn-orange" onclick="setRole('player')">STUDENT (iPad)</button>
         </div>
 
         <!-- 2. Student Name Entry -->
         <div id="screen-name-entry" class="screen">
-            <h2>What is your name?</h2>
-            <input type="text" id="student-name-input" placeholder="Enter Name..." maxlength="12">
-            <button class="btn btn-green" onclick="joinLobby()">JOIN TOURNAMENT</button>
+            <h2 style="font-size: 3rem; color: var(--secondary);">What is your name?</h2>
+            <input type="text" id="student-name-input" placeholder="Type your name..." maxlength="12" autocomplete="off">
+            <button class="btn btn-green" onclick="joinLobby()">JOIN GAME</button>
         </div>
 
         <!-- 3. Host Lobby -->
         <div id="screen-host-lobby" class="screen">
-            <h1 id="lobby-count">Waiting for Students... (0/30)</h1>
+            <h1 id="lobby-count" style="color: var(--primary); font-size: 3rem;">Waiting for Students... (0)</h1>
             <div class="lobby-container">
                 <div class="lobby-grid" id="lobby-display">
                     <!-- Names pop up here -->
                 </div>
             </div>
-            <p style="color: #666;">Names will appear above as students join.</p>
-            <button class="btn btn-green" id="start-btn" style="display:none;" onclick="startTournament()">START TOURNAMENT</button>
+            <!-- Start button is ALWAYS visible, text changes dynamically -->
+            <button class="btn btn-green" id="start-btn" onclick="startTournament()">START TOURNAMENT</button>
+            <p style="color: #666; font-size: 1.2rem;">Names will appear instantly. Max 30 students.</p>
         </div>
 
         <!-- 4. Host Bracket Display -->
         <div id="screen-host-bracket" class="screen">
-            <h2 id="round-label">Round 1</h2>
+            <h1 id="round-label" style="color: var(--primary); font-size: 3rem;">Tournament Bracket</h1>
             <div class="bracket-container" id="bracket-display"></div>
-            <div style="margin-top: 20px;">
-                <button class="btn btn-orange" onclick="nextWord()">START RACE</button>
-                <button class="btn" onclick="resetGame()">RESET ALL</button>
+            <div style="margin-top: 30px; display: flex; gap: 20px;">
+                <button class="btn btn-green" onclick="nextWord()">START NEXT RACE</button>
+                <button class="btn btn-orange" onclick="resetGame()">END TOURNAMENT</button>
             </div>
         </div>
 
         <!-- 5. Student Play Area -->
         <div id="screen-play" class="screen">
-            <h2 id="game-word-prompt">Spell: ???</h2>
+            <h2 id="game-word-prompt" style="font-size: 3rem; color: var(--primary);">Spell the word!</h2>
             <div id="word-slots"></div>
             <div id="letter-sea"></div>
         </div>
 
         <!-- 6. Student Waiting Screen -->
         <div id="screen-wait" class="screen">
-            <h1 id="wait-status">Lobby Joined!</h1>
-            <p id="wait-subtext">Look at the big screen for your name.</p>
+            <h1 id="wait-status" style="font-size: 4rem; color: var(--secondary);">You're In!</h1>
+            <p id="wait-subtext" style="font-size: 2rem;">Look at the Smartboard for your name.</p>
         </div>
     </div>
 
-    <!-- Teacher Dash -->
-    <div id="overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999;" onclick="toggleDash()"></div>
-    <div id="dash-modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:40px; border-radius:30px; z-index:1001; width:80%; max-width:500px;">
-        <h3>Teacher Settings</h3>
-        <p>Words (Comma separated):</p>
-        <textarea id="vocab-input" style="width:100%; height:100px; border-radius:10px; padding:10px;">APPLE, BANANA, CHERRY, DRAGON, EAGLE, FLOWER, GARDEN, HAPPY, JUNGLE</textarea>
-        <button class="btn btn-green" onclick="saveDash()">SAVE & CLOSE</button>
+    <!-- Teacher Dash Modal -->
+    <div class="overlay" id="overlay" onclick="toggleDash()"></div>
+    <div class="modal" id="dash-modal">
+        <h2 style="color: var(--primary); margin-top: 0;">Teacher Dashboard</h2>
+        
+        <div class="dash-section">
+            <label>1. Firebase Configuration (JSON)</label>
+            <textarea id="config-input" rows="5"></textarea>
+        </div>
+        
+        <div class="dash-section">
+            <label>2. Vocabulary List (Comma Separated)</label>
+            <textarea id="vocab-input" rows="3"></textarea>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 30px;">
+            <button class="btn btn-green" style="font-size: 1.2rem; min-width: 150px;" onclick="saveDash()">SAVE & CONNECT</button>
+            <button class="btn btn-orange" style="font-size: 1.2rem; min-width: 150px;" onclick="exportSettings()">EXPORT JSON</button>
+        </div>
+        <div style="margin-top: 20px;">
+            <label style="cursor: pointer; color: var(--secondary); text-decoration: underline;">
+                Import JSON
+                <input type="file" id="import-file" style="display: none;" accept=".json" onchange="importSettings(event)">
+            </label>
+        </div>
     </div>
 
     <script>
-        // --- 1. FIREBASE CONFIG ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyAeW720p-jxvUKu4wGjltbV-7PzXXH2Lv8",
-            authDomain: "tournament-64337.firebaseapp.com",
-            databaseURL: "https://tournament-64337-default-rtdb.firebaseio.com",
-            projectId: "tournament-64337",
-            storageBucket: "tournament-64337.firebasestorage.app",
-            messagingSenderId: "1001808716448",
-            appId: "1:1001808716448:web:d2c23c00b78faebd329fc5"
+        // ==========================================
+        // 1. CONFIGURATION & STATE MANAGEMENT
+        // ==========================================
+        
+        // Default Config - Can be overwritten by the Dashboard
+        let appSettings = {
+            firebaseConfig: {
+                apiKey: "AIzaSyAeW720p-jxvUKu4wGjltbV-7PzXXH2Lv8",
+                authDomain: "tournament-64337.firebaseapp.com",
+                databaseURL: "https://tournament-64337-default-rtdb.firebaseio.com",
+                projectId: "tournament-64337",
+                storageBucket: "tournament-64337.firebasestorage.app",
+                messagingSenderId: "1001808716448",
+                appId: "1:1001808716448:web:d2c23c00b78faebd329fc5"
+            },
+            vocab: ["APPLE", "BANANA", "ORANGE", "ELEPHANT", "TIGER", "SCHOOL", "TEACHER", "HAPPY"]
         };
 
-        let db, role, myName, myId;
-        let gameState = { status: 'lobby', players: {}, matches: [], currentWord: "" };
-        const audio = new (window.AudioContext || window.webkitAudioContext)();
+        let db;
+        let role = null;
+        let myName = null;
+        let myId = null;
+        
+        // The master state synced across all devices
+        let gameState = { 
+            status: 'lobby', 
+            players: {}, 
+            matches: [], 
+            currentWord: "",
+            vocabMemory: [] // For Fisher-Yates memory
+        };
 
-        function playSnd(f, d) {
-            const o = audio.createOscillator();
-            const g = audio.createGain();
-            o.connect(g); g.connect(audio.destination);
-            o.frequency.value = f;
-            g.gain.setValueAtTime(0.1, audio.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.01, audio.currentTime + d);
-            o.start(); o.stop(audio.currentTime + d);
+        // ==========================================
+        // 2. AUDIO API SYSTEM
+        // ==========================================
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSnd(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
+            } else if (type === 'win') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.setValueAtTime(600, now + 0.1);
+                osc.frequency.setValueAtTime(800, now + 0.2);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+                osc.start(now); osc.stop(now + 0.6);
+            }
         }
 
-        // --- 2. CORE ENGINE ---
-        function setRole(r) {
-            role = r;
-            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-            db = firebase.database();
-            
-            db.ref('name_race_v2').on('value', (snap) => {
-                const data = snap.val();
-                if (data) {
-                    gameState = data;
-                    syncUI();
-                }
-            });
+        // ==========================================
+        // 3. FIREBASE CONNECTION & CORE LOGIC
+        // ==========================================
+        function updateStatus(msg, color) {
+            const el = document.getElementById('status-indicator');
+            el.innerText = msg;
+            el.style.background = color;
+        }
 
+        function initFirebase() {
+            try {
+                if (firebase.apps.length === 0) {
+                    firebase.initializeApp(appSettings.firebaseConfig);
+                }
+                db = firebase.database();
+                updateStatus("Connected", "var(--success)");
+                
+                // Real-time Listener
+                db.ref('esl_name_race').on('value', (snap) => {
+                    const data = snap.val();
+                    if (data) {
+                        gameState = data;
+                        syncUI();
+                    } else if (role === 'host') {
+                        // Initialize empty state if nothing exists
+                        db.ref('esl_name_race').set({ status: 'lobby', players: {} });
+                    }
+                });
+            } catch (error) {
+                console.error("Firebase Error:", error);
+                updateStatus("Connection Error", "var(--danger)");
+            }
+        }
+
+        function setRole(selectedRole) {
+            role = selectedRole;
+            initFirebase();
             if (role === 'player') navigate('screen-name-entry');
             else navigate('screen-host-lobby');
         }
 
+        // --- LOBBY LOGIC ---
         function joinLobby() {
             const input = document.getElementById('student-name-input');
             myName = input.value.trim();
-            if (!myName) return alert("Please enter your name!");
             
-            myId = "p_" + Date.now();
-            db.ref('name_race_v2/players/' + myId).set({ name: myName, id: myId });
+            if (!myName) return alert("Please type your name first!");
+            
+            // Check if lobby is full (max 30)
+            const currentPlayers = Object.keys(gameState.players || {}).length;
+            if (currentPlayers >= 30) return alert("Sorry, the game is full! (Max 30)");
+
+            myId = "student_" + Date.now() + "_" + Math.floor(Math.random()*1000);
+            
+            db.ref('esl_name_race/players/' + myId).set({ name: myName, id: myId });
             navigate('screen-wait');
         }
 
+        // --- HOST TOURNAMENT LOGIC ---
         function startTournament() {
             const players = Object.values(gameState.players || {});
-            if (players.length < 2) return alert("At least 2 students needed!");
+            if (players.length < 2) {
+                alert(`Need at least 2 students! Currently have ${players.length}.`);
+                return;
+            }
 
-            // Randomize pairings
+            // Fisher-Yates Shuffle for Random Matchups
             for (let i = players.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [players[i], players[j]] = [players[j], players[i]];
             }
 
+            // Create Pairings
             const matches = [];
             for (let i = 0; i < players.length; i += 2) {
                 const p1 = players[i];
-                const p2 = players[i+1] || { name: "BYE", id: "bye" };
-                matches.push({
-                    p1: p1,
-                    p2: p2,
-                    winner: p2.id === 'bye' ? p1.id : null
-                });
+                const p2 = players[i+1];
+                
+                if (p2) {
+                    matches.push({ p1: p1, p2: p2, winner: null });
+                } else {
+                    // Odd number of students -> Automatic BYE
+                    matches.push({ p1: p1, p2: { name: "BYE (Auto-Win)", id: "bye" }, winner: p1.id });
+                }
             }
 
-            db.ref('name_race_v2').update({
+            // Reset Vocab Memory
+            const vocabMemory = [...appSettings.vocab];
+            
+            db.ref('esl_name_race').update({
                 status: 'bracket',
                 matches: matches,
-                round: 1
+                vocabMemory: vocabMemory,
+                currentWord: ""
             });
         }
 
         function nextWord() {
-            const vocab = (document.getElementById('vocab-input').value.split(',')).map(v => v.trim().toUpperCase());
-            const word = vocab[Math.floor(Math.random() * vocab.length)];
-            db.ref('name_race_v2').update({ status: 'playing', currentWord: word });
+            let memory = gameState.vocabMemory || [...appSettings.vocab];
+            
+            if (memory.length === 0) {
+                // Reshuffle if empty
+                memory = [...appSettings.vocab];
+            }
+
+            // Pick random word and remove it from memory
+            const randomIndex = Math.floor(Math.random() * memory.length);
+            const word = memory.splice(randomIndex, 1)[0];
+
+            db.ref('esl_name_race').update({ 
+                status: 'playing', 
+                currentWord: word,
+                vocabMemory: memory
+            });
         }
 
-        // --- 3. UI SYNC ---
+        // ==========================================
+        // 4. UI SYNCHRONIZATION
+        // ==========================================
         function syncUI() {
             if (role === 'host') {
                 if (gameState.status === 'lobby') {
@@ -338,18 +485,18 @@
                     renderBracket();
                     navigate('screen-host-bracket');
                 }
-            } else {
+            } else if (role === 'player') {
                 if (gameState.status === 'playing') {
-                    const activeMatch = (gameState.matches || []).find(m => (m.p1.id === myId || m.p2.id === myId) && !m.winner);
-                    if (activeMatch) {
-                        startMiniGame();
+                    const myActiveMatch = (gameState.matches || []).find(m => (m.p1.id === myId || m.p2.id === myId) && !m.winner);
+                    if (myActiveMatch) {
+                        setupMiniGame();
                         navigate('screen-play');
                     } else {
-                        updateStudentWaitingStatus();
+                        updateWaitScreen();
                         navigate('screen-wait');
                     }
                 } else {
-                    updateStudentWaitingStatus();
+                    updateWaitScreen();
                     navigate('screen-wait');
                 }
             }
@@ -359,82 +506,116 @@
             const players = Object.values(gameState.players || {});
             const display = document.getElementById('lobby-display');
             display.innerHTML = '';
+            
             players.forEach(p => {
                 const div = document.createElement('div');
                 div.className = 'name-card';
                 div.innerText = p.name;
                 display.appendChild(div);
             });
-            document.getElementById('lobby-count').innerText = `Students Joined: ${players.length}/30`;
-            document.getElementById('start-btn').style.display = players.length >= 2 ? 'block' : 'none';
+
+            const countEl = document.getElementById('lobby-count');
+            countEl.innerText = `Waiting for Students... (${players.length}/30)`;
+            
+            const startBtn = document.getElementById('start-btn');
+            if (players.length >= 2) {
+                startBtn.innerText = "START TOURNAMENT";
+                startBtn.classList.remove('btn-disabled');
+            } else {
+                startBtn.innerText = "WAITING FOR PLAYERS...";
+                startBtn.classList.add('btn-disabled');
+            }
         }
 
         function renderBracket() {
             const display = document.getElementById('bracket-display');
             display.innerHTML = '';
+            
             (gameState.matches || []).forEach(m => {
                 const card = document.createElement('div');
                 card.className = `match-card ${gameState.status === 'playing' && !m.winner ? 'match-active' : ''}`;
                 card.innerHTML = `
                     <div class="p-slot ${m.winner === m.p1.id ? 'p-winner' : ''}">${m.p1.name}</div>
-                    <div class="p-slot ${m.winner === m.p2.id ? 'p-winner' : ''}">${m.p2.name}</div>
+                    <div class="p-slot ${m.winner === m.p2?.id ? 'p-winner' : ''}">${m.p2 ? m.p2.name : '---'}</div>
                 `;
                 display.appendChild(card);
             });
+
+            document.getElementById('round-label').innerText = gameState.status === 'playing' ? `RACE WORD: ${gameState.currentWord}` : "Tournament Bracket";
         }
 
-        function updateStudentWaitingStatus() {
+        function updateWaitScreen() {
             const status = document.getElementById('wait-status');
             const sub = document.getElementById('wait-subtext');
-            const myMatch = (gameState.matches || []).find(m => m.p1.id === myId || m.p2.id === myId);
+            const myMatch = (gameState.matches || []).find(m => m.p1.id === myId || m.p2?.id === myId);
 
             if (gameState.status === 'lobby') {
-                status.innerText = "Lobby Joined!";
-                sub.innerText = "Your name is on the big screen.";
+                status.innerText = "You're In!";
+                sub.innerText = "Look at the Smartboard to see your name.";
             } else if (!myMatch) {
-                status.innerText = "Waiting...";
-                sub.innerText = "You are not in this round.";
+                status.innerText = "Tournament Active";
+                sub.innerText = "You are not in this current bracket round.";
             } else if (myMatch.winner) {
                 status.innerText = myMatch.winner === myId ? "YOU WON! 🏆" : "Round Finished";
-                sub.innerText = "Wait for the teacher to start the next one.";
+                sub.innerText = "Look at the Smartboard for the next race.";
             } else {
                 status.innerText = "Get Ready!";
-                sub.innerText = "The race is about to start.";
+                sub.innerText = "The teacher is about to start your race.";
             }
         }
 
-        // --- 4. GAMEPLAY ---
-        function startMiniGame() {
+        // ==========================================
+        // 5. STUDENT MINI-GAME (Spelling Race)
+        // ==========================================
+        function setupMiniGame() {
             const word = gameState.currentWord;
             const slots = document.getElementById('word-slots');
             const sea = document.getElementById('letter-sea');
-            document.getElementById('game-word-prompt').innerText = "Spell: " + word;
-            slots.innerHTML = ''; sea.innerHTML = '';
-            let progress = 0;
+            
+            document.getElementById('game-word-prompt').innerText = `Spell: ${word}`;
+            slots.innerHTML = ''; 
+            sea.innerHTML = '';
+            
+            let progressIndex = 0;
 
+            // Generate Empty Slots
             word.split('').forEach(() => {
                 const s = document.createElement('div');
                 s.className = 'slot';
                 slots.appendChild(s);
             });
 
-            const chars = (word + "XYZ").split('').sort(() => Math.random() - 0.5);
+            // Generate Bubbles (Target letters + Random distractors)
+            const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const chars = [...word.split(''), alphabet[Math.floor(Math.random()*26)], alphabet[Math.floor(Math.random()*26)]];
+            
+            // Fisher-Yates shuffle bubbles
+            for (let i = chars.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [chars[i], chars[j]] = [chars[j], chars[i]];
+            }
+
             chars.forEach(c => {
                 const b = document.createElement('div');
-                bubblePhysics(b);
                 b.className = 'bubble';
                 b.innerText = c;
-                b.style.left = (Math.random() * 80) + '%';
-                b.style.top = (Math.random() * 80) + '%';
+                
+                // Random position within safe bounds
+                b.style.left = (Math.random() * 75 + 5) + '%';
+                b.style.top = (Math.random() * 70 + 5) + '%';
+                
                 b.onclick = () => {
-                    if (c === word[progress]) {
-                        playSnd(400 + (progress * 100), 0.1);
-                        slots.children[progress].innerText = c;
+                    if (c === word[progressIndex]) {
+                        playSnd('correct');
+                        slots.children[progressIndex].innerText = c;
+                        slots.children[progressIndex].style.borderColor = "var(--success)";
                         b.remove();
-                        progress++;
-                        if (progress === word.length) submitVictory();
+                        progressIndex++;
+                        if (progressIndex === word.length) {
+                            declareWinner();
+                        }
                     } else {
-                        playSnd(150, 0.2);
+                        playSnd('wrong');
                         b.style.background = "var(--danger)";
                         setTimeout(() => b.style.background = "var(--accent)", 300);
                     }
@@ -443,51 +624,98 @@
             });
         }
 
-        function bubblePhysics(el) {
-            let x = Math.random() * 2 - 1;
-            let y = Math.random() * 2 - 1;
-            setInterval(() => {
-                if(!el.parentElement) return;
-                let curLeft = parseFloat(el.style.left);
-                let curTop = parseFloat(el.style.top);
-                if(curLeft < 0 || curLeft > 90) x *= -1;
-                if(curTop < 0 || curTop > 80) y *= -1;
-                el.style.left = (curLeft + x*0.2) + "%";
-                el.style.top = (curTop + y*0.2) + "%";
-            }, 50);
-        }
-
-        function submitVictory() {
-            playSnd(800, 0.4);
-            const mIdx = gameState.matches.findIndex(m => (m.p1.id === myId || m.p2.id === myId) && !m.winner);
-            if (mIdx !== -1) {
-                db.ref(`name_race_v2/matches/${mIdx}/winner`).set(myId);
-                db.ref(`name_race_v2/status`).set('bracket');
+        function declareWinner() {
+            playSnd('win');
+            const matchIndex = gameState.matches.findIndex(m => (m.p1.id === myId || m.p2?.id === myId) && !m.winner);
+            
+            if (matchIndex !== -1) {
+                // Update Firebase: Set winner and switch status back to bracket
+                db.ref(`esl_name_race/matches/${matchIndex}/winner`).set(myId);
+                db.ref(`esl_name_race/status`).set('bracket');
             }
         }
 
-        // --- 5. SYSTEM HELPERS ---
+        // ==========================================
+        // 6. TEACHER DASHBOARD & DATA MANAGEMENT
+        // ==========================================
         function navigate(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
         }
 
         function toggleDash() {
-            const d = document.getElementById('dash-modal');
-            const o = document.getElementById('overlay');
-            const show = d.style.display === 'none';
-            d.style.display = show ? 'block' : 'none';
-            o.style.display = show ? 'block' : 'none';
+            const modal = document.getElementById('dash-modal');
+            const overlay = document.getElementById('overlay');
+            const isVisible = modal.style.display === 'block';
+            
+            if (!isVisible) {
+                document.getElementById('config-input').value = JSON.stringify(appSettings.firebaseConfig, null, 2);
+                document.getElementById('vocab-input').value = appSettings.vocab.join(', ');
+            }
+            
+            modal.style.display = isVisible ? 'none' : 'block';
+            overlay.style.display = isVisible ? 'none' : 'block';
         }
 
         function saveDash() {
-            toggleDash();
+            try {
+                const configRaw = document.getElementById('config-input').value;
+                appSettings.firebaseConfig = JSON.parse(configRaw);
+                
+                const vocabRaw = document.getElementById('vocab-input').value;
+                appSettings.vocab = vocabRaw.split(',').map(w => w.trim().toUpperCase()).filter(w => w.length > 0);
+                
+                // Re-init Firebase in case config changed
+                initFirebase();
+                toggleDash();
+                alert("Settings Saved!");
+            } catch (e) {
+                alert("Error in JSON Format! Please check the Firebase Configuration.");
+            }
         }
 
         function resetGame() {
-            db.ref('name_race_v2').set(null);
-            location.reload();
+            if(confirm("Are you sure? This will kick all students and clear the board.")) {
+                db.ref('esl_name_race').set({ status: 'lobby', players: {} });
+                navigate('screen-host-lobby');
+            }
         }
+
+        function exportSettings() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appSettings, null, 2));
+            const a = document.createElement('a');
+            a.setAttribute("href", dataStr);
+            a.setAttribute("download", "NameRace_Settings.json");
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+
+        function importSettings(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (imported.firebaseConfig && imported.vocab) {
+                        appSettings = imported;
+                        document.getElementById('config-input').value = JSON.stringify(appSettings.firebaseConfig, null, 2);
+                        document.getElementById('vocab-input').value = appSettings.vocab.join(', ');
+                        alert("Settings Imported Successfully!");
+                    } else {
+                        alert("Invalid JSON structure.");
+                    }
+                } catch(error) {
+                    alert("Error reading JSON file.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Initialize status on load
+        window.onload = () => updateStatus("Waiting for Role...", "#999");
     </script>
 </body>
 </html>
