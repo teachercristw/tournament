@@ -8,8 +8,7 @@
     <!-- CDNs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
-
+    
     <style>
         :root {
             --primary: #FF5722;
@@ -27,7 +26,7 @@
             touch-action: none; 
             margin: 0; 
             overflow: hidden; 
-            font-family: 'Fredoka One', 'Century Gothic', 'AppleGothic', sans-serif;
+            font-family: 'Century Gothic', 'AppleGothic', 'Segoe UI', sans-serif;
             background-color: var(--bg);
             color: var(--text);
             font-weight: bold;
@@ -38,6 +37,7 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
         /* --- Screens --- */
@@ -64,7 +64,8 @@
             box-shadow: 0 10px #1565C0;
             transition: all 0.1s;
             margin: 15px;
-            min-width: 300px;
+            min-width: 320px;
+            min-height: 80px; /* Large touch area for Smartboards */
         }
         .btn:active { transform: translateY(4px); box-shadow: 0 6px #1565C0; }
         .btn-orange { background: var(--primary); box-shadow: 0 10px #BF360C; }
@@ -77,6 +78,7 @@
             gap: 25px;
             flex-wrap: wrap;
             width: 100%;
+            min-height: 200px;
         }
         .matchup {
             background: white;
@@ -85,6 +87,7 @@
             padding: 25px;
             min-width: 250px;
             box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            animation: fadeIn 0.5s ease;
         }
         .team-box {
             padding: 18px;
@@ -101,7 +104,7 @@
         }
 
         /* --- Game Area --- */
-        #word-slots { display: flex; gap: 15px; margin-bottom: 40px; }
+        #word-slots { display: flex; gap: 15px; margin-bottom: 40px; flex-wrap: wrap; justify-content: center; }
         .slot {
             width: 80px; height: 80px;
             border: 6px dashed #BDBDBD;
@@ -120,11 +123,10 @@
             border: 6px solid var(--secondary);
             border-radius: 40px;
             overflow: hidden;
-            box-shadow: inset 0 0 30px rgba(0,0,0,0.05);
         }
         .letter-bubble {
             position: absolute;
-            width: 95px; height: 95px;
+            width: 100px; height: 100px; /* Larger for Precision */
             background: var(--accent);
             border-radius: 50%;
             display: flex;
@@ -134,12 +136,11 @@
             box-shadow: 0 10px rgba(0,0,0,0.2);
             cursor: pointer;
             color: white;
-            text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
         }
 
-        /* --- Dashboard --- */
-        #gear { position: fixed; top: 15px; right: 15px; font-size: 40px; cursor: pointer; z-index: 1000; opacity: 0.4; transition: opacity 0.3s; }
-        #gear:hover { opacity: 1; }
+        /* --- Teacher Dashboard --- */
+        #gear { position: fixed; top: 15px; right: 15px; font-size: 40px; cursor: pointer; z-index: 1000; opacity: 0.3; }
+        #status-dot { position: fixed; top: 25px; left: 25px; width: 15px; height: 15px; border-radius: 50%; background: gray; z-index: 1000; }
         #dash-modal {
             display: none;
             position: fixed;
@@ -150,22 +151,24 @@
             max-height: 85vh; overflow-y: auto;
         }
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999; }
-        textarea { width: 100%; border-radius: 15px; padding: 15px; border: 3px solid #ccc; font-family: monospace; font-size: 16px; margin-bottom: 10px; }
+        textarea { width: 100%; border-radius: 15px; padding: 15px; border: 3px solid #ccc; font-family: monospace; font-size: 16px; box-sizing: border-box; }
 
         @keyframes pulse { 0% { transform: scale(1.1); } 50% { transform: scale(1.18); } 100% { transform: scale(1.1); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
+    <div id="status-dot" title="Firebase Status"></div>
     <div id="gear" onclick="toggleDash()">⚙️</div>
 
     <div id="game-container">
         <!-- Start Screen -->
         <div id="screen-start" class="screen active">
             <h1 style="font-size: 6rem; color: var(--primary); margin:0;">WORD RACE</h1>
-            <h2 style="color: var(--secondary); font-size: 2.5rem;">TOURNAMENT</h2>
-            <button class="btn" onclick="setRole('host')">HOST (Big Screen)</button>
-            <button class="btn btn-orange" onclick="setRole('player')">PLAYER (iPad)</button>
+            <h2 style="color: var(--secondary); font-size: 2.5rem; margin-top:0;">Tournament Mode</h2>
+            <button class="btn" onclick="setRole('host')">TEACHER (Smartboard)</button>
+            <button class="btn btn-orange" onclick="setRole('player')">TEAM (iPad)</button>
         </div>
 
         <!-- Team Setup -->
@@ -176,11 +179,13 @@
 
         <!-- Host Bracket -->
         <div id="screen-host" class="screen">
-            <h1 id="host-msg" style="color: var(--primary); font-size: 3rem;">Ready!</h1>
-            <div class="bracket" id="bracket-display"></div>
+            <h1 id="host-msg" style="color: var(--primary); font-size: 3rem;">Ready to Race?</h1>
+            <div class="bracket" id="bracket-display">
+                <p style="color:#aaa;">Click "New Bracket" to assign teams!</p>
+            </div>
             <div style="margin-top: 50px;">
-                <button class="btn btn-green" onclick="newRound()">START RACE</button>
-                <button class="btn btn-orange" onclick="resetBracket()">NEW BRACKET</button>
+                <button class="btn btn-green" onclick="newRound()">START RACE (NEW WORD)</button>
+                <button class="btn btn-orange" onclick="resetBracket()">SHUFFLE/NEW BRACKET</button>
             </div>
         </div>
 
@@ -194,28 +199,33 @@
         <!-- Feedback -->
         <div id="screen-wait" class="screen">
             <h1 id="wait-msg" style="font-size: 5rem;">Get Ready...</h1>
-            <p style="font-size: 2rem;">Wait for the teacher to start!</p>
+            <p style="font-size: 2rem;">Wait for teacher to start!</p>
         </div>
     </div>
 
     <!-- Teacher Dashboard -->
     <div class="overlay" id="overlay" onclick="toggleDash()"></div>
     <div id="dash-modal">
-        <h2 style="color: var(--primary);">Tournament Settings</h2>
+        <h2 style="color: var(--primary);">Tournament Control</h2>
         <div style="text-align: left;">
-            <label>Firebase Config (Paste Console Code):</label>
-            <textarea id="fb-input" rows="8"></textarea>
-            <label>Word List (Comma Separated):</label>
+            <label>1. Firebase Credentials (JSON):</label>
+            <textarea id="fb-input" rows="6" placeholder='{"apiKey": "..."}'></textarea>
+            <br><br>
+            <label>2. Word List (Comma Separated):</label>
             <textarea id="vocab-input" rows="3">APPLE, BANANA, ORANGE, SCHOOL, TEACHER, TIGER, DRAGON, HAPPY, PURPLE, SUNDAY</textarea>
         </div>
         <div style="display:flex; gap:15px; margin-top:20px;">
-            <button class="btn" style="font-size: 1.2rem; min-width: 150px; padding: 15px;" onclick="applySettings()">SAVE & SYNC</button>
+            <button class="btn" style="font-size: 1.2rem; min-width: 150px; padding: 15px;" onclick="applySettings()">SAVE & CONNECT</button>
             <button class="btn btn-orange" style="font-size: 1.2rem; min-width: 150px; padding: 15px;" onclick="toggleDash()">CLOSE</button>
         </div>
     </div>
 
     <script>
-        // --- Game Config & Firebase ---
+        // --- Configuration ---
+        const fbInput = document.getElementById('fb-input');
+        const vocabInput = document.getElementById('vocab-input');
+        const statusDot = document.getElementById('status-dot');
+
         let db = null;
         let myTeam = null;
         let myRole = null;
@@ -227,7 +237,8 @@
             vocab: ["APPLE", "BANANA", "ORANGE", "SCHOOL", "TEACHER"]
         };
 
-        const currentConfig = {
+        // Your Credentials
+        const savedConfig = {
             apiKey: "AIzaSyAeW720p-jxvUKu4wGjltbV-7PzXXH2Lv8",
             authDomain: "tournament-64337.firebaseapp.com",
             databaseURL: "https://tournament-64337-default-rtdb.firebaseio.com",
@@ -251,36 +262,37 @@
             osc.start(); osc.stop(audio.currentTime + d);
         }
 
-        // --- Core Helpers ---
+        // --- Utils ---
         function shuffle(arr) {
-            for (let i = arr.length - 1; i > 0; i--) {
+            let a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [arr[i], arr[j]] = [arr[j], arr[i]];
+                [a[i], a[j]] = [a[j], a[i]];
             }
-            return arr;
+            return a;
         }
 
-        function cleanConfig(str) {
-            try {
-                let cleaned = str.replace(/^(const|let|var)\s+\w+\s*=\s*/, '').replace(/;$/, '');
-                return JSON.parse(cleaned.replace(/(\w+):/g, '"$1"').replace(/'/g, '"'));
-            } catch(e) { return null; }
-        }
-
-        // --- Firebase Logic ---
+        // --- Firebase ---
         function initFB(config) {
-            if (!firebase.apps.length) firebase.initializeApp(config);
-            db = firebase.database();
-            db.ref('word_race_data').on('value', (snap) => {
-                const data = snap.val();
-                if (data) {
-                    state = data;
-                    syncUI();
-                }
-            });
+            try {
+                if (!firebase.apps.length) firebase.initializeApp(config);
+                db = firebase.database();
+                statusDot.style.background = "#4CAF50"; // Green for connected
+                
+                db.ref('word_race_data').on('value', (snap) => {
+                    const data = snap.val();
+                    if (data) {
+                        state = data;
+                        syncUI();
+                    }
+                });
+            } catch(e) {
+                statusDot.style.background = "#F44336"; // Red for error
+                console.error(e);
+            }
         }
 
-        // --- Navigation ---
+        // --- Set Role ---
         function setRole(r) {
             myRole = r;
             if (r === 'player') {
@@ -288,6 +300,7 @@
                 showScreen('screen-setup');
             } else {
                 showScreen('screen-host');
+                if (state.matches.length > 0) renderBracket();
             }
         }
 
@@ -296,7 +309,7 @@
             document.getElementById(id).classList.add('active');
         }
 
-        // --- Host: Tournament Control ---
+        // --- Teacher Logic ---
         function resetBracket() {
             const teams = shuffle([1, 2, 3, 4, 5, 6]);
             const matches = [
@@ -304,24 +317,53 @@
                 { t1: teams[2], t2: teams[3], winner: null },
                 { t1: teams[4], t2: teams[5], winner: null }
             ];
-            db.ref('word_race_data').update({
+            const updates = {
                 matches: matches,
                 status: 'waiting',
                 currentWord: ""
-            });
+            };
+            
+            if(db) db.ref('word_race_data').update(updates);
+            state = {...state, ...updates};
+            renderBracket();
         }
 
         function newRound() {
+            if (state.matches.length === 0) {
+                alert("Please click 'New Bracket' first!");
+                return;
+            }
             const word = state.vocab[Math.floor(Math.random() * state.vocab.length)];
             const resetWinners = state.matches.map(m => ({...m, winner: null}));
-            db.ref('word_race_data').update({
+            
+            const updates = {
                 currentWord: word,
                 status: 'playing',
                 matches: resetWinners
-            });
+            };
+
+            if(db) db.ref('word_race_data').update(updates);
+            state = {...state, ...updates};
+            syncUI();
         }
 
-        // --- Player: Game Engine ---
+        function renderBracket() {
+            const container = document.getElementById('bracket-display');
+            container.innerHTML = '';
+            state.matches.forEach(m => {
+                const div = document.createElement('div');
+                div.className = 'matchup';
+                div.innerHTML = `
+                    <div class="team-box ${m.winner == m.t1 ? 'winner-box' : ''}">TEAM ${m.t1}</div>
+                    <div style="color:#aaa; font-size:1.2rem;">VS</div>
+                    <div class="team-box ${m.winner == m.t2 ? 'winner-box' : ''}">TEAM ${m.t2}</div>
+                `;
+                container.appendChild(div);
+            });
+            document.getElementById('host-msg').innerText = state.status === 'playing' ? `RACE WORD: ${state.currentWord}` : "Bracket Ready!";
+        }
+
+        // --- Player Game Logic ---
         function renderTeamGrid() {
             const grid = document.getElementById('team-grid');
             grid.innerHTML = '';
@@ -339,19 +381,19 @@
             }
         }
 
-        function playWordGame() {
+        function setupPlayArea() {
             const match = state.matches.find(m => m.t1 == myTeam || m.t2 == myTeam);
-            
             if (!match || state.status !== 'playing' || match.winner) {
                 if (match && match.winner) {
-                    document.getElementById('wait-msg').innerText = match.winner == myTeam ? "WINNER! 🏆" : "Too Slow! 💨";
+                    document.getElementById('wait-msg').innerText = match.winner == myTeam ? "WINNER! 🏆" : "TOO SLOW! 💨";
                 } else {
-                    document.getElementById('wait-msg').innerText = "Waiting...";
+                    document.getElementById('wait-msg').innerText = "Wait for Teacher...";
                 }
                 showScreen('screen-wait');
                 return;
             }
 
+            showScreen('screen-play');
             const slots = document.getElementById('word-slots');
             const sea = document.getElementById('letter-sea');
             slots.innerHTML = ''; sea.innerHTML = '';
@@ -366,9 +408,8 @@
                 slots.appendChild(s);
             });
 
-            // Scramble + Distractors
             const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            const pool = shuffle([...chars, alphabet[Math.floor(Math.random()*26)], alphabet[Math.floor(Math.random()*26)]]);
+            const pool = shuffle([...chars, alphabet[Math.floor(Math.random()*26)]]);
             
             pool.forEach(c => {
                 const bubble = document.createElement('div');
@@ -396,66 +437,56 @@
                 };
                 sea.appendChild(bubble);
             });
-            showScreen('screen-play');
         }
 
         function winMatch() {
             const mIdx = state.matches.findIndex(m => m.t1 == myTeam || m.t2 == myTeam);
             if (state.matches[mIdx].winner === null) {
-                db.ref(`word_race_data/matches/${mIdx}/winner`).set(myTeam);
+                if(db) db.ref(`word_race_data/matches/${mIdx}/winner`).set(myTeam);
+                // Local update if offline/laggy
+                state.matches[mIdx].winner = myTeam;
+                syncUI();
             }
         }
 
-        // --- UI Syncer ---
+        // --- Syncer ---
         function syncUI() {
             if (myRole === 'host') {
-                const container = document.getElementById('bracket-display');
-                container.innerHTML = '';
-                state.matches.forEach(m => {
-                    const div = document.createElement('div');
-                    div.className = 'matchup';
-                    div.innerHTML = `
-                        <div class="team-box ${m.winner == m.t1 ? 'winner-box' : ''}">TEAM ${m.t1}</div>
-                        <div style="color:#aaa">VS</div>
-                        <div class="team-box ${m.winner == m.t2 ? 'winner-box' : ''}">TEAM ${m.t2}</div>
-                    `;
-                    container.appendChild(div);
-                });
-                document.getElementById('host-msg').innerText = state.status === 'playing' ? `ROUND: ${state.currentWord}` : "Tournament Ready";
+                renderBracket();
             } else if (myRole === 'player' && myTeam) {
-                playWordGame();
+                setupPlayArea();
             }
         }
 
-        // --- Dash Actions ---
+        // --- Dashboard ---
         function toggleDash() {
             const m = document.getElementById('dash-modal');
             const o = document.getElementById('overlay');
-            const visible = m.style.display === 'block';
-            m.style.display = visible ? 'none' : 'block';
-            o.style.display = visible ? 'none' : 'block';
-            if (!visible) {
-                document.getElementById('fb-input').value = JSON.stringify(currentConfig, null, 2);
-                document.getElementById('vocab-input').value = state.vocab.join(', ');
+            const isVisible = m.style.display === 'block';
+            m.style.display = isVisible ? 'none' : 'block';
+            o.style.display = isVisible ? 'none' : 'block';
+            if(!isVisible) {
+                fbInput.value = JSON.stringify(savedConfig, null, 2);
+                vocabInput.value = state.vocab.join(', ');
             }
         }
 
         function applySettings() {
-            const vocab = document.getElementById('vocab-input').value.split(',').map(v => v.trim().toUpperCase()).filter(v => v);
-            const rawFB = document.getElementById('fb-input').value;
-            const config = cleanConfig(rawFB);
-
-            if (config) {
+            const vocab = vocabInput.value.split(',').map(v => v.trim().toUpperCase()).filter(v => v);
+            let config;
+            try {
+                config = JSON.parse(fbInput.value);
+                state.vocab = vocab;
                 initFB(config);
-                db.ref('word_race_data/vocab').set(vocab);
-                alert("Synced!");
+                if(db) db.ref('word_race_data/vocab').set(vocab);
                 toggleDash();
-            } else {
-                alert("Config JSON Error!");
+            } catch(e) {
+                alert("Invalid Firebase JSON!");
             }
         }
 
-        window.onload = () => initFB(initialFirebaseConfig);
+        // Auto-run connection
+        window.onload = () => initFB(savedConfig);
     </script>
 </body>
 </html>
