@@ -53,7 +53,7 @@
             background: var(--secondary);
             color: white;
             border: none;
-            padding: 15px 30px;
+            padding: 15px 35px;
             font-size: 1.5rem;
             border-radius: 50px;
             cursor: pointer;
@@ -78,78 +78,101 @@
             font-family: inherit;
         }
 
-        /* Lobby & Bracket */
-        .lobby-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 10px;
+        /* Lobby Display */
+        .lobby-container {
             width: 90%;
-            max-height: 50vh;
-            overflow-y: auto;
+            max-width: 800px;
             background: white;
-            padding: 20px;
-            border-radius: 25px;
-            border: 5px dashed var(--secondary);
-        }
-        .player-tag {
-            background: var(--accent);
-            padding: 10px;
-            border-radius: 15px;
-            font-size: 1rem;
-            color: white;
-            animation: pop 0.3s ease;
+            border-radius: 30px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 6px dashed var(--secondary);
+            margin-bottom: 20px;
         }
 
-        .tournament-grid {
+        .lobby-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+            max-height: 40vh;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .name-card {
+            background: var(--accent);
+            color: white;
+            padding: 12px;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            text-transform: capitalize;
+            animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 4px 0px #d4a017;
+        }
+
+        /* Bracket Styles */
+        .bracket-container {
             display: flex;
-            gap: 20px;
-            width: 100%;
-            justify-content: center;
+            gap: 40px;
             align-items: center;
             overflow-x: auto;
-            padding: 20px;
+            padding: 40px;
+            width: 100%;
         }
+
         .match-card {
             background: white;
-            border: 4px solid #ddd;
-            border-radius: 15px;
+            border: 4px solid #ccc;
+            border-radius: 20px;
+            padding: 15px;
+            width: 200px;
+            position: relative;
+        }
+        .match-active { border-color: var(--primary); box-shadow: 0 0 20px var(--primary); }
+        
+        .p-slot {
             padding: 10px;
-            width: 180px;
-            margin-bottom: 10px;
-        }
-        .match-active { border-color: var(--primary); box-shadow: 0 0 15px var(--primary); }
-        .slot {
-            padding: 8px;
-            margin: 4px;
-            background: #f1f1f1;
+            margin: 5px 0;
+            background: #f0f0f0;
             border-radius: 10px;
-            font-size: 0.9rem;
+            font-size: 1rem;
         }
-        .slot.winner { background: var(--success) !important; color: white; }
+        .p-winner { background: var(--success) !important; color: white; }
 
         /* Game Elements */
+        #word-slots { display: flex; gap: 10px; margin-bottom: 30px; }
+        .slot {
+            width: 70px; height: 70px;
+            border: 5px dashed #ccc;
+            border-radius: 15px;
+            background: white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3rem;
+        }
         #letter-sea {
             position: relative;
             width: 90vw; height: 40vh;
-            background: rgba(255,255,255,0.6);
-            border-radius: 30px;
-            border: 4px solid var(--secondary);
+            background: rgba(255,255,255,0.7);
+            border: 5px solid var(--secondary);
+            border-radius: 40px;
             overflow: hidden;
-            margin-top: 20px;
         }
         .bubble {
             position: absolute;
-            width: 70px; height: 70px;
+            width: 90px; height: 90px;
             background: var(--accent);
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 2rem; color: white;
-            box-shadow: 0 6px rgba(0,0,0,0.2);
+            font-size: 3rem; color: white;
+            box-shadow: 0 8px rgba(0,0,0,0.2);
             cursor: pointer;
         }
 
-        #gear { position: fixed; top: 10px; right: 10px; font-size: 30px; cursor: pointer; z-index: 1000; opacity: 0.3; }
-        @keyframes pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+        #gear { position: fixed; top: 15px; right: 15px; font-size: 35px; cursor: pointer; opacity: 0.3; z-index: 1000; }
+        @keyframes bounceIn {
+            from { opacity: 0; transform: scale(0.3); }
+            to { opacity: 1; transform: scale(1); }
+        }
     </style>
 </head>
 <body>
@@ -157,60 +180,69 @@
     <div id="gear" onclick="toggleDash()">⚙️</div>
 
     <div id="game-container">
-        <!-- 1. Start/Entry -->
+        <!-- 1. Start Screen -->
         <div id="screen-start" class="screen active">
-            <h1 style="font-size: 4rem; color: var(--primary);">NAME RACE</h1>
+            <h1 style="font-size: 5rem; color: var(--primary); margin:0;">WORD RACE</h1>
+            <p style="font-size: 1.5rem;">The Ultimate Tournament</p>
             <button class="btn btn-green" onclick="setRole('host')">TEACHER (Smartboard)</button>
             <button class="btn btn-orange" onclick="setRole('player')">STUDENT (iPad)</button>
         </div>
 
         <!-- 2. Student Name Entry -->
         <div id="screen-name-entry" class="screen">
-            <h2>Enter Your Name</h2>
-            <input type="text" id="student-name-input" placeholder="e.g. Alex" maxlength="12">
-            <button class="btn btn-green" onclick="joinLobby()">JOIN GAME</button>
+            <h2>What is your name?</h2>
+            <input type="text" id="student-name-input" placeholder="Enter Name..." maxlength="12">
+            <button class="btn btn-green" onclick="joinLobby()">JOIN TOURNAMENT</button>
         </div>
 
         <!-- 3. Host Lobby -->
         <div id="screen-host-lobby" class="screen">
-            <h1 id="lobby-count">Waiting for Students (0/30)</h1>
-            <div class="lobby-list" id="lobby-display"></div>
-            <button class="btn btn-green" id="start-tourney-btn" style="display:none;" onclick="startTournament()">START TOURNAMENT</button>
+            <h1 id="lobby-count">Waiting for Students... (0/30)</h1>
+            <div class="lobby-container">
+                <div class="lobby-grid" id="lobby-display">
+                    <!-- Names pop up here -->
+                </div>
+            </div>
+            <p style="color: #666;">Names will appear above as students join.</p>
+            <button class="btn btn-green" id="start-btn" style="display:none;" onclick="startTournament()">START TOURNAMENT</button>
         </div>
 
-        <!-- 4. Tournament Bracket (Host) -->
+        <!-- 4. Host Bracket Display -->
         <div id="screen-host-bracket" class="screen">
-            <h2 id="round-label">Tournament Bracket</h2>
-            <div class="tournament-grid" id="bracket-display"></div>
-            <button class="btn btn-orange" onclick="nextWord()">START NEXT RACE</button>
-            <button class="btn" onclick="resetAll()">RESET GAME</button>
+            <h2 id="round-label">Round 1</h2>
+            <div class="bracket-container" id="bracket-display"></div>
+            <div style="margin-top: 20px;">
+                <button class="btn btn-orange" onclick="nextWord()">START RACE</button>
+                <button class="btn" onclick="resetGame()">RESET ALL</button>
+            </div>
         </div>
 
-        <!-- 5. Student Play -->
+        <!-- 5. Student Play Area -->
         <div id="screen-play" class="screen">
-            <h2 id="game-prompt">Spell the Word!</h2>
-            <div id="word-slots" style="display:flex; gap:10px; margin-bottom:20px;"></div>
+            <h2 id="game-word-prompt">Spell: ???</h2>
+            <div id="word-slots"></div>
             <div id="letter-sea"></div>
         </div>
 
-        <!-- 6. Student Wait -->
+        <!-- 6. Student Waiting Screen -->
         <div id="screen-wait" class="screen">
-            <h1 id="wait-status">Joined!</h1>
-            <p>Wait for the teacher to start the race.</p>
+            <h1 id="wait-status">Lobby Joined!</h1>
+            <p id="wait-subtext">Look at the big screen for your name.</p>
         </div>
     </div>
 
-    <!-- Dash -->
-    <div class="overlay" id="overlay" onclick="toggleDash()"></div>
-    <div id="dash-modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:30px; border-radius:30px; z-index:1001; width:80%;">
-        <h3>Settings</h3>
-        <textarea id="vocab-input" style="width:100%; height:100px;">APPLE, BANANA, CHERRY, DRAGON, EAGLE, FLOWER, GARDEN</textarea>
-        <button class="btn" onclick="saveDash()">SAVE</button>
+    <!-- Teacher Dash -->
+    <div id="overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999;" onclick="toggleDash()"></div>
+    <div id="dash-modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:40px; border-radius:30px; z-index:1001; width:80%; max-width:500px;">
+        <h3>Teacher Settings</h3>
+        <p>Words (Comma separated):</p>
+        <textarea id="vocab-input" style="width:100%; height:100px; border-radius:10px; padding:10px;">APPLE, BANANA, CHERRY, DRAGON, EAGLE, FLOWER, GARDEN, HAPPY, JUNGLE</textarea>
+        <button class="btn btn-green" onclick="saveDash()">SAVE & CLOSE</button>
     </div>
 
     <script>
-        // --- 1. CONFIG & STATE ---
-        const fbConfig = {
+        // --- 1. FIREBASE CONFIG ---
+        const firebaseConfig = {
             apiKey: "AIzaSyAeW720p-jxvUKu4wGjltbV-7PzXXH2Lv8",
             authDomain: "tournament-64337.firebaseapp.com",
             databaseURL: "https://tournament-64337-default-rtdb.firebaseio.com",
@@ -220,11 +252,11 @@
             appId: "1:1001808716448:web:d2c23c00b78faebd329fc5"
         };
 
-        let db, role, myName;
-        let localState = { players: {}, status: 'lobby', matches: [], currentWord: "" };
+        let db, role, myName, myId;
+        let gameState = { status: 'lobby', players: {}, matches: [], currentWord: "" };
         const audio = new (window.AudioContext || window.webkitAudioContext)();
 
-        function playTone(f, d) {
+        function playSnd(f, d) {
             const o = audio.createOscillator();
             const g = audio.createGain();
             o.connect(g); g.connect(audio.destination);
@@ -234,16 +266,16 @@
             o.start(); o.stop(audio.currentTime + d);
         }
 
-        // --- 2. CORE LOGIC ---
+        // --- 2. CORE ENGINE ---
         function setRole(r) {
             role = r;
-            if (!firebase.apps.length) firebase.initializeApp(fbConfig);
+            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
             db = firebase.database();
             
-            db.ref('name_race_game').on('value', (snap) => {
-                const val = snap.val();
-                if (val) {
-                    localState = val;
+            db.ref('name_race_v2').on('value', (snap) => {
+                const data = snap.val();
+                if (data) {
+                    gameState = data;
                     syncUI();
                 }
             });
@@ -255,34 +287,35 @@
         function joinLobby() {
             const input = document.getElementById('student-name-input');
             myName = input.value.trim();
-            if (!myName) return alert("Enter your name!");
+            if (!myName) return alert("Please enter your name!");
             
-            const pKey = db.ref('name_race_game/players').push().key;
-            db.ref('name_race_game/players/' + pKey).set({ name: myName, id: pKey });
+            myId = "p_" + Date.now();
+            db.ref('name_race_v2/players/' + myId).set({ name: myName, id: myId });
             navigate('screen-wait');
         }
 
         function startTournament() {
-            const playerArray = Object.values(localState.players || {});
-            if (playerArray.length < 2) return alert("Need at least 2 players!");
-            
-            // Fisher-Yates Shuffle
-            for (let i = playerArray.length - 1; i > 0; i--) {
+            const players = Object.values(gameState.players || {});
+            if (players.length < 2) return alert("At least 2 students needed!");
+
+            // Randomize pairings
+            for (let i = players.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [playerArray[i], playerArray[j]] = [playerArray[j], playerArray[i]];
+                [players[i], players[j]] = [players[j], players[i]];
             }
 
-            // Build Bracket Matches
             const matches = [];
-            for (let i = 0; i < playerArray.length; i += 2) {
+            for (let i = 0; i < players.length; i += 2) {
+                const p1 = players[i];
+                const p2 = players[i+1] || { name: "BYE", id: "bye" };
                 matches.push({
-                    p1: playerArray[i],
-                    p2: playerArray[i+1] || { name: "BYE", id: "bye" },
-                    winner: (playerArray[i+1] ? null : playerArray[i].id)
+                    p1: p1,
+                    p2: p2,
+                    winner: p2.id === 'bye' ? p1.id : null
                 });
             }
 
-            db.ref('name_race_game').update({
+            db.ref('name_race_v2').update({
                 status: 'bracket',
                 matches: matches,
                 round: 1
@@ -290,132 +323,150 @@
         }
 
         function nextWord() {
-            const v = localState.vocab || ["APPLE", "BANANA"];
-            const word = v[Math.floor(Math.random() * v.length)];
-            db.ref('name_race_game').update({ status: 'playing', currentWord: word });
+            const vocab = (document.getElementById('vocab-input').value.split(',')).map(v => v.trim().toUpperCase());
+            const word = vocab[Math.floor(Math.random() * vocab.length)];
+            db.ref('name_race_v2').update({ status: 'playing', currentWord: word });
         }
 
-        // --- 3. UI SYNCING ---
+        // --- 3. UI SYNC ---
         function syncUI() {
             if (role === 'host') {
-                if (localState.status === 'lobby') {
+                if (gameState.status === 'lobby') {
                     renderLobby();
+                    navigate('screen-host-lobby');
                 } else {
                     renderBracket();
                     navigate('screen-host-bracket');
                 }
             } else {
-                if (localState.status === 'playing') {
-                    const myMatch = localState.matches.find(m => (m.p1.id === myNameId() || m.p2.id === myNameId()) && !m.winner);
-                    if (myMatch) {
+                if (gameState.status === 'playing') {
+                    const activeMatch = (gameState.matches || []).find(m => (m.p1.id === myId || m.p2.id === myId) && !m.winner);
+                    if (activeMatch) {
                         startMiniGame();
                         navigate('screen-play');
                     } else {
-                        updateStudentWait();
+                        updateStudentWaitingStatus();
                         navigate('screen-wait');
                     }
-                } else if (localState.status === 'bracket') {
-                    updateStudentWait();
+                } else {
+                    updateStudentWaitingStatus();
                     navigate('screen-wait');
                 }
             }
         }
 
-        function myNameId() {
-            return Object.values(localState.players || {}).find(p => p.name === myName)?.id;
-        }
-
         function renderLobby() {
-            const list = document.getElementById('lobby-display');
-            const players = Object.values(localState.players || {});
-            list.innerHTML = '';
+            const players = Object.values(gameState.players || {});
+            const display = document.getElementById('lobby-display');
+            display.innerHTML = '';
             players.forEach(p => {
-                const el = document.createElement('div');
-                el.className = 'player-tag';
-                el.innerText = p.name;
-                list.appendChild(el);
+                const div = document.createElement('div');
+                div.className = 'name-card';
+                div.innerText = p.name;
+                display.appendChild(div);
             });
             document.getElementById('lobby-count').innerText = `Students Joined: ${players.length}/30`;
-            document.getElementById('start-tourney-btn').style.display = players.length >= 2 ? 'block' : 'none';
+            document.getElementById('start-btn').style.display = players.length >= 2 ? 'block' : 'none';
         }
 
         function renderBracket() {
             const display = document.getElementById('bracket-display');
             display.innerHTML = '';
-            localState.matches.forEach(m => {
-                const div = document.createElement('div');
-                div.className = `match-card ${localState.status==='playing' && !m.winner ? 'match-active' : ''}`;
-                div.innerHTML = `
-                    <div class="slot ${m.winner === m.p1.id ? 'winner' : ''}">${m.p1.name}</div>
-                    <div class="slot ${m.winner === m.p2.id ? 'winner' : ''}">${m.p2.name}</div>
+            (gameState.matches || []).forEach(m => {
+                const card = document.createElement('div');
+                card.className = `match-card ${gameState.status === 'playing' && !m.winner ? 'match-active' : ''}`;
+                card.innerHTML = `
+                    <div class="p-slot ${m.winner === m.p1.id ? 'p-winner' : ''}">${m.p1.name}</div>
+                    <div class="p-slot ${m.winner === m.p2.id ? 'p-winner' : ''}">${m.p2.name}</div>
                 `;
-                display.appendChild(div);
+                display.appendChild(card);
             });
         }
 
-        function updateStudentWait() {
-            const statusText = document.getElementById('wait-status');
-            const myId = myNameId();
-            const match = localState.matches.find(m => m.p1.id === myId || m.p2.id === myId);
-            
-            if (!match) {
-                statusText.innerText = "Waiting for Round...";
-            } else if (match.winner) {
-                statusText.innerText = match.winner === myId ? "YOU WON! 🏆" : "Round Over";
+        function updateStudentWaitingStatus() {
+            const status = document.getElementById('wait-status');
+            const sub = document.getElementById('wait-subtext');
+            const myMatch = (gameState.matches || []).find(m => m.p1.id === myId || m.p2.id === myId);
+
+            if (gameState.status === 'lobby') {
+                status.innerText = "Lobby Joined!";
+                sub.innerText = "Your name is on the big screen.";
+            } else if (!myMatch) {
+                status.innerText = "Waiting...";
+                sub.innerText = "You are not in this round.";
+            } else if (myMatch.winner) {
+                status.innerText = myMatch.winner === myId ? "YOU WON! 🏆" : "Round Finished";
+                sub.innerText = "Wait for the teacher to start the next one.";
             } else {
-                statusText.innerText = "Get Ready to Race!";
+                status.innerText = "Get Ready!";
+                sub.innerText = "The race is about to start.";
             }
         }
 
         // --- 4. GAMEPLAY ---
         function startMiniGame() {
-            const word = localState.currentWord;
+            const word = gameState.currentWord;
             const slots = document.getElementById('word-slots');
             const sea = document.getElementById('letter-sea');
+            document.getElementById('game-word-prompt').innerText = "Spell: " + word;
             slots.innerHTML = ''; sea.innerHTML = '';
             let progress = 0;
 
             word.split('').forEach(() => {
                 const s = document.createElement('div');
-                s.style = "width:50px; height:50px; border:3px solid #ccc; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:2rem; background:white;";
+                s.className = 'slot';
                 slots.appendChild(s);
             });
 
             const chars = (word + "XYZ").split('').sort(() => Math.random() - 0.5);
             chars.forEach(c => {
                 const b = document.createElement('div');
+                bubblePhysics(b);
                 b.className = 'bubble';
                 b.innerText = c;
-                b.style.left = Math.random() * 80 + '%';
-                b.style.top = Math.random() * 80 + '%';
+                b.style.left = (Math.random() * 80) + '%';
+                b.style.top = (Math.random() * 80) + '%';
                 b.onclick = () => {
                     if (c === word[progress]) {
-                        playTone(400 + (progress*100), 0.1);
+                        playSnd(400 + (progress * 100), 0.1);
                         slots.children[progress].innerText = c;
                         b.remove();
                         progress++;
-                        if (progress === word.length) submitWin();
+                        if (progress === word.length) submitVictory();
                     } else {
-                        playTone(150, 0.2);
+                        playSnd(150, 0.2);
                         b.style.background = "var(--danger)";
-                        setTimeout(() => b.style.background = "var(--accent)", 400);
+                        setTimeout(() => b.style.background = "var(--accent)", 300);
                     }
                 };
                 sea.appendChild(b);
             });
         }
 
-        function submitWin() {
-            playTone(800, 0.4);
-            const myId = myNameId();
-            const mIdx = localState.matches.findIndex(m => (m.p1.id === myId || m.p2.id === myId) && !m.winner);
+        function bubblePhysics(el) {
+            let x = Math.random() * 2 - 1;
+            let y = Math.random() * 2 - 1;
+            setInterval(() => {
+                if(!el.parentElement) return;
+                let curLeft = parseFloat(el.style.left);
+                let curTop = parseFloat(el.style.top);
+                if(curLeft < 0 || curLeft > 90) x *= -1;
+                if(curTop < 0 || curTop > 80) y *= -1;
+                el.style.left = (curLeft + x*0.2) + "%";
+                el.style.top = (curTop + y*0.2) + "%";
+            }, 50);
+        }
+
+        function submitVictory() {
+            playSnd(800, 0.4);
+            const mIdx = gameState.matches.findIndex(m => (m.p1.id === myId || m.p2.id === myId) && !m.winner);
             if (mIdx !== -1) {
-                db.ref(`name_race_game/matches/${mIdx}/winner`).set(myId);
-                db.ref(`name_race_game/status`).set('bracket');
+                db.ref(`name_race_v2/matches/${mIdx}/winner`).set(myId);
+                db.ref(`name_race_v2/status`).set('bracket');
             }
         }
 
-        // --- 5. HELPERS ---
+        // --- 5. SYSTEM HELPERS ---
         function navigate(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
@@ -424,19 +475,17 @@
         function toggleDash() {
             const d = document.getElementById('dash-modal');
             const o = document.getElementById('overlay');
-            const s = d.style.display === 'none';
-            d.style.display = s ? 'block' : 'none';
-            o.style.display = s ? 'block' : 'none';
+            const show = d.style.display === 'none';
+            d.style.display = show ? 'block' : 'none';
+            o.style.display = show ? 'block' : 'none';
         }
 
         function saveDash() {
-            const v = document.getElementById('vocab-input').value.split(',').map(x => x.trim().toUpperCase());
-            db.ref('name_race_game/vocab').set(v);
             toggleDash();
         }
 
-        function resetAll() {
-            db.ref('name_race_game').set(null);
+        function resetGame() {
+            db.ref('name_race_v2').set(null);
             location.reload();
         }
     </script>
