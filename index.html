@@ -21,7 +21,7 @@
             --text: #2C3E50;
         }
 
-        /* --- Mandatory Smartboard/Tablet Constraints --- */
+        /* --- Mandatory Constraints for Smartboards/Tablets --- */
         body { 
             user-select: none; 
             -webkit-user-select: none; 
@@ -217,7 +217,7 @@
         .dash-section { text-align: left; margin-bottom: 25px; }
         .dash-section label { color: var(--primary); font-size: 1.4rem; display: block; margin-bottom: 5px;}
         .dash-section textarea, .dash-section input[type="text"], .dash-section input[type="password"] { 
-            width: 100%; border-radius: 15px; padding: 15px; border: 4px solid #E0E0E0; font-family: monospace; font-size: 1.1rem; box-sizing: border-box; margin-bottom:0;
+            width: 100%; border-radius: 15px; padding: 15px; border: 4px solid #E0E0E0; font-family: inherit; font-size: 1.1rem; box-sizing: border-box; margin-bottom:0;
         }
         .file-upload { display: inline-block; padding: 15px 30px; background: var(--secondary); color: white; border-radius: 50px; cursor: pointer; font-size: 1.2rem; margin-top: 5px; box-shadow: 0 6px #1565C0;}
 
@@ -228,9 +228,7 @@
 <body>
 
     <div id="status-indicator" title="Connection Status"></div>
-    <!-- Gear icon strictly prompts password for Dashboard intent -->
     <div id="gear" onclick="promptPassword('dash')">⚙️</div>
-    <!-- Student Logout Button -->
     <div id="leave-btn" onclick="studentLogout()">🚪 LEAVE GAME</div>
 
     <div id="game-container">
@@ -238,7 +236,6 @@
         <div id="screen-start" class="screen active">
             <h1 style="font-size: 6rem; color: var(--primary); margin:0; text-shadow: 4px 4px 0px white;">WORD RACE</h1>
             <p style="font-size: 2.5rem; color: var(--secondary); margin-bottom: 40px;">Interactive Tournament</p>
-            <!-- Teacher button strictly prompts password for Host intent -->
             <button class="btn btn-green" onclick="promptPassword('host')">TEACHER (Smartboard)</button>
             <button class="btn btn-orange" onclick="setRole('player')">STUDENT (iPad)</button>
         </div>
@@ -314,7 +311,7 @@
 
         <div class="dash-section">
             <label>Firebase Config (JSON)</label>
-            <textarea id="config-input" rows="4"></textarea>
+            <textarea id="config-input" rows="4" style="font-family: monospace;"></textarea>
         </div>
         
         <div class="dash-section">
@@ -324,11 +321,12 @@
 
         <div class="dash-section">
             <label>Game Background Image</label>
+            <br>
             <label class="file-upload">
                 Upload Image
                 <input type="file" id="bg-upload" style="display: none;" accept="image/*" onchange="handleImageUpload(event)">
             </label>
-            <button class="btn" style="min-width: 100px; min-height: 40px; padding: 10px; font-size: 1rem;" onclick="clearBg()">Clear</button>
+            <button class="btn" style="min-width: 100px; min-height: 40px; padding: 10px; font-size: 1rem;" onclick="clearBg()">Clear Background</button>
         </div>
 
         <div style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; margin-top: 30px;">
@@ -345,10 +343,10 @@
 
     <script>
         // ==========================================
-        // 1. STATE & CONFIGURATION
+        // 1. STATE & DEFAULT SETTINGS
         // ==========================================
-        let appSettings = {
-            dashPassword: "1037440", // Stored explicitly as a string
+        const defaultSettings = {
+            dashPassword: "1037440",
             firebaseConfig: {
                 apiKey: "AIzaSyAeW720p-jxvUKu4wGjltbV-7PzXXH2Lv8",
                 authDomain: "tournament-64337.firebaseapp.com",
@@ -362,17 +360,18 @@
             bgImageBase64: ""
         };
 
+        let appSettings = { ...defaultSettings };
         let db;
         let role = null;
         let myName = null;
         let myId = null;
-        let currentPinIntent = ''; // Tracks if PIN is for 'host' or 'dash'
+        let currentPinIntent = ''; 
         
         let playerList = {}; 
         let sysState = { status: 'lobby', matches: [], currentWord: "", vocabMemory: [], champion: null };
 
         // ==========================================
-        // 2. WEB AUDIO API
+        // 2. WEB AUDIO API (Synthesized SFX)
         // ==========================================
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSnd(type) {
@@ -466,6 +465,7 @@
                 navigate('screen-wait');
                 updateWaitScreen();
                 toggleLeaveButton();
+                input.value = ''; // Clear input
             });
         }
 
@@ -558,7 +558,7 @@
                 return;
             }
 
-            shuffleArray(winners); // Optional: Shuffle winners for next bracket
+            shuffleArray(winners);
 
             const newMatches = [];
             for (let i = 0; i < winners.length; i += 2) {
@@ -765,12 +765,16 @@
             currentPinIntent = intent;
             document.getElementById('overlay').style.display = 'block';
             document.getElementById('password-modal').style.display = 'block';
-            document.getElementById('dash-pass-input').value = '';
+            
+            const passInput = document.getElementById('dash-pass-input');
+            passInput.value = '';
+            passInput.focus();
         }
 
         function verifyPassword() {
             const input = document.getElementById('dash-pass-input').value.trim();
-            const validPin = appSettings.dashPassword.toString().trim();
+            // Bulletproof cast to string to prevent mismatch
+            const validPin = (appSettings.dashPassword || "1037440").toString().trim();
 
             if (input === validPin) {
                 closeModals();
@@ -794,14 +798,15 @@
             document.getElementById('overlay').style.display = 'block';
             document.getElementById('dash-modal').style.display = 'block';
             
-            document.getElementById('pass-setting-input').value = appSettings.dashPassword;
+            // Populate fields
+            document.getElementById('pass-setting-input').value = appSettings.dashPassword || "1037440";
             document.getElementById('config-input').value = JSON.stringify(appSettings.firebaseConfig, null, 2);
             document.getElementById('vocab-input').value = appSettings.vocab.join(', ');
         }
 
         function saveDash() {
             try {
-                // Ensure password is treated as a string
+                // Ensure PIN is saved strictly as a string
                 appSettings.dashPassword = document.getElementById('pass-setting-input').value.toString().trim();
                 appSettings.firebaseConfig = JSON.parse(document.getElementById('config-input').value);
                 appSettings.vocab = document.getElementById('vocab-input').value.split(',').map(w => w.trim().toUpperCase()).filter(w => w);
@@ -862,14 +867,15 @@
             reader.onload = function(e) {
                 try {
                     const imported = JSON.parse(e.target.result);
-                    if (imported.firebaseConfig && imported.vocab && imported.dashPassword !== undefined) {
-                        // Coerce password to string just in case
-                        imported.dashPassword = imported.dashPassword.toString();
-                        appSettings = imported;
-                        openDashboard(); // Refresh inputs
-                        applyBackground();
-                        alert("Settings Imported!");
-                    } else alert("Invalid Settings File.");
+                    // Bulletproof merge: ensures missing keys fallback to defaultSettings
+                    appSettings = { ...defaultSettings, ...imported };
+                    
+                    // Force PIN to string
+                    appSettings.dashPassword = appSettings.dashPassword.toString();
+                    
+                    openDashboard(); // Refresh inputs
+                    applyBackground();
+                    alert("Settings Imported!");
                 } catch(err) { alert("Error reading file."); }
             };
             reader.readAsText(file);
@@ -881,8 +887,9 @@
             if (saved) {
                 try {
                     const parsed = JSON.parse(saved);
-                    if(parsed.dashPassword !== undefined) parsed.dashPassword = parsed.dashPassword.toString();
-                    appSettings = parsed;
+                    // Merge parsed data over defaults to prevent undefined variables
+                    appSettings = { ...defaultSettings, ...parsed };
+                    appSettings.dashPassword = appSettings.dashPassword.toString();
                     applyBackground();
                 } catch(e){}
             }
